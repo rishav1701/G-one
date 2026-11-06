@@ -2,52 +2,57 @@
 
 ## Delivered
 
-- Added a FastAPI application, production secret guard, PostgreSQL connection setup, request ID/security-header middleware, and uniform API error envelopes.
-- Added SQLAlchemy models and the initial Alembic migration for ward, app_user, user_ward, session, api_key, system_config, and audit_log.
-- Added authentication routes with Argon2id password hashes, hashed opaque 256-bit session tokens, httpOnly SameSite=Lax cookies, pre-login and session CSRF checks, idle/absolute expiry, per-IP throttling, account lockout, password change, logout, and generated-password seeding.
-- Added a deny-by-default session dependency, role dependency helper, route enumeration test, and backend security-spine test.
-- Added the React/Vite/TypeScript frontend shell, persistent simulation banner, login form with show/hide password, auth context, CSRF-aware API client, route guard, shared UI components, Inter font dependency, design tokens, contrast/raw-value scripts, and a level badge test.
-- Added a package lockfile. Generated node_modules are excluded from Git.
+- FastAPI service, structured request identifiers, security headers, uniform error envelopes, PostgreSQL connection, and production secret guard.
+- SQLAlchemy security-spine models and Alembic migration for ward, app_user, user_ward, session, api_key, system_config, and audit_log.
+- Argon2id password hashes; 256-bit opaque server-side sessions stored by hash; httpOnly SameSite=Lax session cookies; Secure cookies outside development; login CSRF challenge; mutation CSRF checks; idle and absolute session expiry; IP throttling; lockout; password change; logout; generated-password seed command.
+- Deny-by-default session dependency, role dependency helper, public-route enumeration test, and backend auth-spine tests.
+- React/Vite/strict TypeScript shell and login page with persistent simulation banner, skip link, password visibility toggle, CSRF-aware client, route guard, change-password UI, and shared Button, Dialog, Field, Table, LevelBadge, and six-state StateBlock components.
+- Self-hosted Inter fonts, design tokens, Tailwind config, raw-value/contrast checks, and pinned frontend dependency lockfile.
+- Playwright tests for browser login, generic wrong-password response, account lockout, missing-CSRF rejection, password rotation, session expiry, and 1440/1024/390 viewport screenshots.
+- Updated the responsive header after visual review found overflow at 390 px; screenshot and no-horizontal-scroll reruns pass.
 
 ## Gate results
 
-- Backend starts: UNVERIFIED — Python could not launch.
-- Alembic migration applies to PostgreSQL: UNVERIFIED — Python and PostgreSQL unavailable; Docker daemon unreachable.
-- Backend tests pass: UNVERIFIED — Python runtime unavailable.
-- Frontend build and type-check: PASS — npm run build completed and Vite emitted the production bundle.
-- Frontend tests: PASS — npm run test passed 2 files and 2 tests.
+- Backend starts: PASS — Uvicorn reported startup complete at http://127.0.0.1:8000.
+- Health endpoint: PASS — GET /health returned status ok while connected to PostgreSQL.
+- PostgreSQL migration: PASS — Alembic upgrade head completed on PostgreSQL 17.11; alembic current reports 0001_security_spine (head); all eight expected tables are present.
+- Backend tests: PASS — pytest reported 3 passed. Python compileall passed.
+- Frontend build and type-check: PASS — npm run build completed and emitted the Vite production bundle.
+- Frontend unit tests: PASS — 3 files and 8 tests passed.
 - Raw-value scan: PASS.
-- Contrast check: PASS — body 17.85:1; secondary text 7.58:1.
-- Login works in browser; wrong password, lockout, CSRF rejection, and expiry behave as specified: UNVERIFIED — no Playwright/Chromium and no runnable backend.
-- UI gate for login and shell: UNVERIFIED — no Playwright/Chromium.
+- Contrast check: PASS — all eight checked pairs are at least 5.91:1.
+- Browser login, wrong password, lockout, CSRF rejection, password change, and expiry: PASS — Playwright reported 3 passed.
+- UI gate: PASS — login and shell manually reviewed at 1440×900, 1024×768, and 390×844. Screenshots are in docs/screens/phase-1/. No page-level horizontal scroll; docs/UI_REVIEW.md records each item.
 
-## Recovery attempts
+## Commands and evidence
 
-- Initial npm installation did not make dependencies available immediately. A later reviewed installation populated node_modules and generated package-lock.json.
-- npm install in offline mode failed with ENOTCACHED for Vitest.
-- The first frontend build identified TypeScript test-global and React import errors. Those were corrected; subsequent build and Vitest runs passed.
-- python --version still cannot launch the Windows Store alias.
+- Backend compile: Python 3.11.9 portable runtime, python -m compileall -q app alembic tests — passed.
+- Backend tests: python -m pytest -q -p no:cacheprovider — 3 passed.
+- Migration: DATABASE_URL=postgresql+psycopg://gone:gone@127.0.0.1:5432/gone; python -m alembic upgrade head — passed.
+- Migration state/table check: python -m alembic current and psql \dt — revision at head; eight tables.
+- Health: GET http://127.0.0.1:8000/health — status ok.
+- Frontend: npm run build — passed; npm run test — 8 passed; npm run check:raw — passed; npm run check:contrast — passed; npm run test:e2e — 3 passed.
+
+## UNVERIFIED
+
+- Docker Desktop engine remains unavailable, but the Phase 1 gate was verified against a real local PostgreSQL 17.11 server extracted in user space.
+- gitleaks was not needed by Phase 1; its availability remains for the hardening phase.
 
 ## Decisions
 
-- Continue the same project in its current location, C:Usersishav rajDesktopprojectG-one, because the previous gone path no longer exists and this repository contains the Phase 0 commits.
-- Preserve the pinned frontend dependencies and lockfile. Exclude generated dependencies from Git.
-- Stop before Phase 2 because the Phase 1 backend, database, and browser gates remain unverified.
+- A temporary portable Python 3.11.9 runtime and EDB PostgreSQL 17.11 binaries were kept under ignored .tools so the gate could run without a machine-wide installation.
+- The local PostgreSQL test cluster uses UTF-8 and is initialized under ignored .tools/pgdata-utf8.
+- SQLAlchemy creates the PostgreSQL role enum when the first enum-backed table is created; the migration no longer creates that enum twice.
+- See docs/DECISIONS.md for the complete decision log.
 
 ## Deviations and cut items
 
-- Phase 1 remains incomplete. The backend and authentication source is not runtime-verified. Full role, lockout, session-expiry, CSRF and migration tests remain to be run.
-- Browser login and the visual UI review were not run.
-- Tailwind tokens and configuration are present; no frontend test suite beyond the current two tests was added.
+None for the Phase 1 exit gate.
 
-## Known defects / risks
+## Known defects
 
-- Python runtime and PostgreSQL were unavailable, so backend syntax, imports, migration behavior, and auth behavior may still contain defects.
-- The browser flow and the new login CSRF challenge have not been exercised end to end.
-- Visual review remains UNVERIFIED.
+No known Phase 1 gate defects. Later product phases will add clinical APIs and replace the current honest empty-dashboard state with persisted worklists.
 
 ## Next phase prerequisites
 
-- Restore working Python 3.11+ and PostgreSQL, or Docker Desktop daemon access.
-- Provide Playwright/Chromium for the required browser and UI gates.
-- Re-run all Phase 1 backend, browser, and UI checks before advancing to Phase 2.
+Phase 1 gate passed. Phase 2 may proceed using the supplied NEWS2 specification; clinical methodology must retain its clinical-review notice and official-source comparison.

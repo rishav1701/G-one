@@ -1,8 +1,8 @@
 # Project state
 
-- Current phase: Phase 1 attempted; backend and browser exit-gate items remain unverified, so Phase 2 has not started.
-- Completed: Phase 0 reconnaissance/planning; Phase 1 foundation source; frontend production build, type-check, Vitest, raw-value scan, and contrast checks pass.
-- Product code: Phase 1 foundational backend/frontend source is present but the backend is not runtime-verified. See docs/reports/phase-1.md.
-- Open risks: Python Windows Store alias cannot launch; PostgreSQL absent; Docker daemon unreachable; Playwright/Chromium and gitleaks absent. Backend runtime, migration, backend tests, browser login, and visual gate are UNVERIFIED.
+- Current phase: Phase 1 complete; Phase 2 is next.
+- Completed: Phase 0 reconnaissance/planning; Phase 1 security foundation, login/shell, PostgreSQL migration, backend tests, frontend build/unit tests, auth/browser flows, and UI gate.
+- Product code: Phase 1 gate passed. Evidence is in docs/reports/phase-1.md; screenshot review is in docs/UI_REVIEW.md and docs/screens/phase-1/.
+- Open risks: Docker Desktop engine is unavailable; Phase 1 was verified with a local PostgreSQL 17.11 cluster and portable Python runtime under ignored .tools. gitleaks availability remains unverified for hardening.
 - Track B: pending user M0 data decision and later user-run local training. Neither blocks the application.
-- Last checkpoint: Phase 1 foundation commit. Working tree is clean.
+- Last checkpoint: Phase 1 gate changes are ready to commit.

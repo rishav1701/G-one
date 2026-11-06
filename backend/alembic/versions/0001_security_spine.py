@@ -3,7 +3,6 @@ import sqlalchemy as sa
 revision="0001_security_spine"; down_revision=None; branch_labels=None; depends_on=None
 def upgrade():
     role=sa.Enum("ADMIN","SENIOR_CLINICIAN","CLINICIAN","VIEWER",name="user_role")
-    role.create(op.get_bind(),checkfirst=True)
     op.create_table("ward",sa.Column("id",sa.String(36),primary_key=True),sa.Column("name",sa.String(80),nullable=False,unique=True))
     op.create_table("app_user",sa.Column("id",sa.String(36),primary_key=True),sa.Column("username",sa.String(120),nullable=False,unique=True),sa.Column("password_hash",sa.String(255),nullable=False),sa.Column("role",role,nullable=False),sa.Column("active",sa.Boolean,nullable=False,server_default=sa.true()),sa.Column("failed_logins",sa.Integer,nullable=False,server_default="0"),sa.Column("locked_until",sa.DateTime(timezone=True)))
     op.create_index("ix_app_user_username","app_user",["username"])

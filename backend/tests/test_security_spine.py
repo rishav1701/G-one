@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
-PUBLIC={"/health","/api/v1/auth/login","/api/v1/openapi.json","/docs","/docs/oauth2-redirect","/redoc"}
+PUBLIC={"/health","/api/v1/auth/login","/api/v1/auth/csrf","/api/v1/openapi.json","/docs","/docs/oauth2-redirect","/redoc"}
 def dependency_names(route):
     found=set()
     def visit(dep):

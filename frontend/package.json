@@ -9,7 +9,8 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "check:raw": "node scripts/check-raw-values.cjs",
-    "check:contrast": "node scripts/check-contrast.cjs"
+    "check:contrast": "node scripts/check-contrast.cjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.5",
@@ -26,11 +27,12 @@
     "@types/react": "18.3.20",
     "@types/react-dom": "18.3.6",
     "@vitejs/plugin-react": "4.4.1",
+    "autoprefixer": "10.4.21",
     "jsdom": "26.1.0",
+    "postcss": "8.5.3",
     "typescript": "5.8.3",
     "vite": "6.3.5",
     "vitest": "3.1.2",
-    "autoprefixer": "10.4.21",
-    "postcss": "8.5.3"
+    "@playwright/test": "1.65.0"
   }
 }

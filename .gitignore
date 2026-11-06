@@ -8,3 +8,6 @@ coverage/
 __pycache__/
 .pytest_cache/
 .venv/
+.tools/
+playwright-report/
+frontend/test-results/
