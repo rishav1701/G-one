@@ -8,7 +8,9 @@ def main():
     password=os.environ.get("SEED_ADMIN_PASSWORD") or secrets.token_urlsafe(18)
     db=SessionLocal()
     try:
-        if db.query(AppUser).filter_by(username=username).first(): raise SystemExit("Seed user already exists; refusing to reset credentials")
+        if db.query(AppUser).filter_by(username=username).first():
+            print(f"Seed user {username} already exists; credentials were not changed.")
+            return
         ward=Ward(name="Ward 1"); db.add(ward); db.flush()
         user=AppUser(username=username,password_hash=PasswordHasher().hash(password),role=Role.ADMIN,active=True)
         db.add(user); db.flush(); db.add(UserWard(user_id=user.id,ward_id=ward.id)); db.commit()

@@ -12,6 +12,6 @@ G One is a simulated software demonstration, not for clinical use. NEWS2 require
 
 ## Product work still open
 
-- Docker Compose startup and clean-clone packaging have not yet been verified.
-- Phase 7 must review the dependency audit findings and complete the security, accessibility, UI, and secret scans.
-- Phase 8 must verify the documented install, seed, reset, and demonstration commands from a fresh clone.
+- Docker Compose startup and clean-clone container packaging remain unverified because the local Docker Desktop engine did not return a server response.
+- A qualified clinician must verify NEWS2 thresholds, missing-data behavior, labels, and local escalation language before any clinical use.
+- Release-hosted TLS, backups, operational monitoring, and paging integration are outside this local demonstration.

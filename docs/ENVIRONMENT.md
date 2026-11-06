@@ -17,3 +17,7 @@ Date: 2026-11-06 (Asia/Calcutta)
 | gitleaks | Not found on PATH | Use a documented repository text scan at hardening; this cannot equal a dedicated secret scanner. |
 
 Commands actually run: `git status --short --branch` (reported not a Git repository); `node --version`; `npm --version`; `docker --version`; `docker compose version`; `psql --version` (not found); Python/py/python3 version probes (launch failures); Node `require.resolve` checks for Playwright packages; `Test-NetConnection pypi.org:443` (DNS failure); `Get-Command gitleaks` (not found).
+
+## Phase 8 packaging probe
+
+The isolated `.tools/python311` runtime was used for PostgreSQL tests and the package checks. Node/npm, Playwright, and PostgreSQL were verified locally. Docker CLI reports v29.4.0 and Compose v5.1.2; `docker compose config --quiet` passes, but `docker info` and `docker version` did not return a server response within the bounded probe. Container builds and Compose runtime therefore remain UNVERIFIED.

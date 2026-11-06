@@ -21,3 +21,5 @@
 - 2026-11-07: Mark seeded lab results as simulated and expose them read-only; they are not included in NEWS2 or model scoring.
 - 2026-11-07: Load only explicitly accepted artifacts from `models/active` after manifest, hash, configuration, and path checks; candidate artifacts remain inactive.
 - 2026-11-07: Keep NEWS2 as the only alert-driving score; model alerting remains disabled unless an accepted verified model is deployed.
+- 2026-11-07: Package the demo with Nginx same-origin API proxy and a local-only Compose stack; use generated ignored `.env` secrets and leave the active model directory empty in the shipped container.
+- 2026-11-07: Make admin seeding idempotent without changing existing credentials; simulator reset remains an explicit deterministic reseed operation.

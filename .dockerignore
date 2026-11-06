@@ -1,0 +1,16 @@
+.git
+.tools
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+**/__pycache__
+**/.pytest_cache
+**/.coverage*
+docs/screens
+models/candidate
+*.pyc
