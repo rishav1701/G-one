@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.alerts import router as alerts_router
 from app.api.clinical import router as clinical_router
+from app.api.admin import router as admin_router
 from app.core.config import settings
 from app.core.db import engine, SessionLocal
 from app.core.errors import error_handlers
@@ -62,3 +63,4 @@ def health():
 app.include_router(auth_router)
 app.include_router(clinical_router)
 app.include_router(alerts_router)
+app.include_router(admin_router)

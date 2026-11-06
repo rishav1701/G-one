@@ -31,12 +31,14 @@ START = datetime(2026, 1, 1, tzinfo=timezone.utc)
 @dataclass
 class SimulatedClock:
     current: datetime
+    refresh_assessments: bool = False
 
     def now(self):
         return self.current
 
     def advance(self, **kwargs):
         self.current += timedelta(**kwargs)
+        self.refresh_assessments = True
         return self.current
 
 

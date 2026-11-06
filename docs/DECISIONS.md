@@ -13,3 +13,7 @@
 - 2026-11-06: Kept Track B training fixture-only until the user supplies the M0 data-use/location decision and pre-result acceptance criteria; fixture candidates are always marked unaccepted.
 
 - 2026-11-07: Disable manual observation entry for ADMIN and VIEWER in the UI and explain the required clinical role; API role checks remain authoritative. Phase 4 monitoring graphs use server-returned NEWS2 parameter subscores and presentation-only score bands.
+- 2026-11-07: Restrict user management, operational controls, audit viewing, system status, and simulator reset/advance to ADMIN; clinical alert actions remain role-authorized by the API.
+- 2026-11-07: Freeze simulator assessments until explicit simulated-clock advancement so clinical values and alert states remain deterministic between control actions.
+- 2026-11-07: Give horizontally scrollable tables and the observation-entry panel keyboard focus and accessible names after axe-core identified serious keyboard-access findings.
+- 2026-11-07: Record the npm audit findings from the required axe-core dependency install for Phase 7 review; do not apply broad or automatic dependency upgrades during Phase 5.

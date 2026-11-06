@@ -1,4 +1,5 @@
 import {expect,test} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -6,8 +7,14 @@ const username=process.env.E2E_USERNAME||'phaseadmin';
 const password=process.env.E2E_PASSWORD||'Phase1-Rotated-Passphrase-2026!';
 const sizes=[[1440,900],[1024,768],[390,844]] as const;
 const screenshots=path.resolve(process.cwd(),'..','docs','screens','phase-4');
+async function assertAccessible(page: import('@playwright/test').Page, route: string){
+ const results=await new AxeBuilder({page}).analyze();
+ const serious=results.violations.filter(item=>item.impact==='serious'||item.impact==='critical');
+ expect(serious.map(item=>({id:item.id,impact:item.impact,help:item.help,nodes:item.nodes.map(node=>node.target)})),`${route} axe violations`).toEqual([]);
+}
 
 test('Phase 4 routes render and fit all required viewports',async({page})=>{
+ test.setTimeout(120000);
  fs.mkdirSync(screenshots,{recursive:true});
  const errors:string[]=[];
  page.on('pageerror',error=>errors.push(error.message));
@@ -16,7 +23,8 @@ test('Phase 4 routes render and fit all required viewports',async({page})=>{
  for(const [width,height] of sizes){
   await page.setViewportSize({width,height});
   await expect(page.getByText('SIMULATED DATA. DEMONSTRATION ONLY. NOT FOR CLINICAL USE.')).toBeVisible();
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
+  await assertAccessible(page,'login');
+  expect(await page.evaluate(()=>document.body.scrollWidth<=window.innerWidth&&getComputedStyle(document.documentElement).overflowX==='clip')).toBeTruthy();
   await page.screenshot({path:path.join(screenshots,`login-${width}x${height}.png`),fullPage:true});
  }
  await page.setViewportSize({width:1440,height:900});
@@ -33,8 +41,9 @@ test('Phase 4 routes render and fit all required viewports',async({page})=>{
    await expect(page.locator('.skeleton')).toHaveCount(0);
    await expect(page.getByText('SIMULATED DATA. DEMONSTRATION ONLY. NOT FOR CLINICAL USE.')).toBeVisible();
    await page.waitForTimeout(250);
-   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),`${name} at ${width}px has horizontal page overflow`).toBeTruthy();
+   expect(await page.evaluate(()=>document.body.scrollWidth<=window.innerWidth&&getComputedStyle(document.documentElement).overflowX==='clip'),`${name} at ${width}px has horizontal page overflow`).toBeTruthy();
    await page.screenshot({path:path.join(screenshots,`${name}-${width}x${height}.png`),fullPage:true});
+   await assertAccessible(page,`${name} ${width}x${height}`);
   }
  }
  await page.goto('/patients?q=SIM-000007');

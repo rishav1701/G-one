@@ -171,7 +171,7 @@ def list_assessments(
     now = clock.now()
     # Persisted simulator assessments represent deterministic scenario steps. Keep their
     # expected states visible until an explicit simulated-clock action recomputes them.
-    if not admission.is_simulated or hasattr(clock, "current"):
+    if not admission.is_simulated or getattr(clock, "refresh_assessments", False):
         refresh_current_assessment(db, admission, now, request.state.request_id)
     rows = db.scalars(select(RiskAssessment).where(RiskAssessment.admission_id == admission_id).order_by(RiskAssessment.computed_at.desc()).limit(limit).offset(offset)).all()
     _audit(db, request, user.id, "assessment.list", "admission", admission_id)
