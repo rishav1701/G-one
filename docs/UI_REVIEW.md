@@ -13,6 +13,18 @@ Reviewed manually from Playwright screenshots at 1440×900, 1024×768, and 390×
 
 Contrast results from the contrast script: body 17.06:1; secondary 7.24:1; primary 6.44:1; banner 17.85:1; LOW 6.81:1; LOW_MEDIUM 6.62:1; MEDIUM 6.88:1; HIGH 5.91:1. Every measured pair exceeds 4.5:1.
 
+# UI Review — Phase 6
+
+Analytics and patient detail additions were reviewed at 1440×900, 1024×768, and 390×844. The Playwright run generated nine screenshots and checked axe-core on each route and viewport; zero serious or critical violations remain. Browser assertions checked the persistent simulation banner, route rendering, page-level overflow, and console errors. Scenario tables remain internally scrollable on narrow screens.
+
+| Route | 1440×900 | 1024×768 | 390×844 | Evidence |
+|---|---|---|---|---|
+| Analytics | PASS | PASS | PASS | `docs/screens/phase-6/analytics-*.png` |
+| Patient overview — no deployed model | PASS | PASS | PASS | `docs/screens/phase-6/patient-model-none-*.png` |
+| Patient labs | PASS | PASS | PASS | `docs/screens/phase-6/patient-labs-*.png` |
+
+Analytics displays database-derived operational metrics, the six seeded scenario outcomes labelled as demonstration behaviour, and model evaluation only when verified metrics exist. Patient overview states that no trained model is deployed; the NEWS2 badge remains visible. Lab rows are identified as simulated. Raw style-value checks passed. Contrast pairs: body 17.06:1, secondary 7.24:1, primary 6.44:1, banner 17.85:1, LOW 6.81:1, LOW_MEDIUM 6.62:1, MEDIUM 6.88:1, HIGH 5.91:1.
+
 The mobile shell initially overflowed at 390 px. The top bar was changed to a three-row grid, and the rerun passed both the browser scroll-width assertion and manual visual review.
 
 # UI Review — Phase 4

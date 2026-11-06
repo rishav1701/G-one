@@ -17,3 +17,7 @@
 - 2026-11-07: Freeze simulator assessments until explicit simulated-clock advancement so clinical values and alert states remain deterministic between control actions.
 - 2026-11-07: Give horizontally scrollable tables and the observation-entry panel keyboard focus and accessible names after axe-core identified serious keyboard-access findings.
 - 2026-11-07: Record the npm audit findings from the required axe-core dependency install for Phase 7 review; do not apply broad or automatic dependency upgrades during Phase 5.
+- 2026-11-07: Compute analytics metrics and scenario counts from current database records at request time; label scenario outcomes as demonstration behaviour, not clinical performance.
+- 2026-11-07: Mark seeded lab results as simulated and expose them read-only; they are not included in NEWS2 or model scoring.
+- 2026-11-07: Load only explicitly accepted artifacts from `models/active` after manifest, hash, configuration, and path checks; candidate artifacts remain inactive.
+- 2026-11-07: Keep NEWS2 as the only alert-driving score; model alerting remains disabled unless an accepted verified model is deployed.

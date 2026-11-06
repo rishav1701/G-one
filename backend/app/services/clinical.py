@@ -111,6 +111,7 @@ def persist_assessment(db: DBSession, admission: Admission, now) -> RiskAssessme
     if deterministic_id:
         existing = db.get(RiskAssessment, deterministic_id)
         if existing:
+            _persist_model_prediction(db, admission, existing)
             return existing
     record = RiskAssessment(
         id=deterministic_id or str(uuid.uuid4()),
@@ -120,7 +121,18 @@ def persist_assessment(db: DBSession, admission: Admission, now) -> RiskAssessme
         level=result.level.value, total=result.total, explanation=result.explanation(), computed_at=now,
     )
     db.add(record)
+    db.flush()
+    _persist_model_prediction(db, admission, record)
     return record
+
+
+def _persist_model_prediction(db: DBSession, admission: Admission, assessment: RiskAssessment):
+    try:
+        from app.services.model_registry import InvalidModelArtifact, persist_prediction
+        persist_prediction(db, admission, assessment)
+    except Exception:
+        # Model failures never interrupt the NEWS2 assessment path; model output fails closed.
+        return None
 
 
 def refresh_current_assessment(db: DBSession, admission: Admission, now, request_id: str | None = None) -> RiskAssessment:
@@ -132,6 +144,7 @@ def refresh_current_assessment(db: DBSession, admission: Admission, now, request
     latest = db.scalar(select(RiskAssessment).where(RiskAssessment.admission_id == admission.id).order_by(RiskAssessment.computed_at.desc()).limit(1))
     ids = sorted(row.id for row in source_rows)
     if latest and latest.observation_ids == ids and latest.explanation == expected.explanation():
+        _persist_model_prediction(db, admission, latest)
         return latest
     assessment = persist_assessment(db, admission, now)
     db.flush()

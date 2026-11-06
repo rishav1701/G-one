@@ -18,6 +18,7 @@ DEFAULTS = {
     "alert_downgrade_assessments": "2",
     "alert_escalation_delay_minutes": "5",
     "alert_escalation_check_seconds": "10",
+    "model_alerting_enabled": "false",
 }
 
 
@@ -40,6 +41,12 @@ def update_settings(db: DBSession, actor: AppUser, request_id: str, changes: dic
         value = int(merged[name])
         if not minimum <= value <= maximum:
             raise ValueError("Operational setting is outside its allowed range")
+    if merged["model_alerting_enabled"] not in ("true", "false"):
+        raise ValueError("Model alerting must be true or false")
+    if merged["model_alerting_enabled"] == "true":
+        from app.services.model_registry import load_verified_active
+        if load_verified_active() is None:
+            raise ValueError("Model alerting requires a verified accepted model")
     for key, value in changes.items():
         row = db.get(SystemConfig, key)
         if row is None:

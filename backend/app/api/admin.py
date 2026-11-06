@@ -102,6 +102,12 @@ def system_status(request: Request, actor: AppUser = Depends(admin_only), db: DB
         connection.execute(select(1))
     _audit(request, db, actor, "admin.status_read", "system", None)
     db.commit()
+    try:
+        from app.services.model_registry import InvalidModelArtifact, load_verified_active
+        active_model = load_verified_active()
+        model_status = f"{active_model['manifest']['model_id']} · {active_model['manifest']['version']}" if active_model else "No trained ML model is deployed"
+    except InvalidModelArtifact:
+        model_status = "Active model artifact failed integrity checks"
     return {
         "database": "connected",
         "users": db.scalar(select(func.count()).select_from(AppUser)),
@@ -109,7 +115,7 @@ def system_status(request: Request, actor: AppUser = Depends(admin_only), db: DB
         "open_alerts": db.scalar(select(func.count()).select_from(Alert).where(Alert.status.in_(("OPEN", "ACKNOWLEDGED")))),
         "observations": db.scalar(select(func.count()).select_from(Observation)),
         "data_sources": [{"source": row.source, "connected": row.connected, "status": row.status_code, "updated_at": row.updated_at} for row in db.scalars(select(DataSourceStatus).order_by(DataSourceStatus.source)).all()],
-        "model": "No trained ML model is deployed",
+        "model": model_status,
     }
 
 

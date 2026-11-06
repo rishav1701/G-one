@@ -148,3 +148,4 @@ class OperationalSettingsInput(BaseModel):
     alert_downgrade_assessments: str | None = Field(default=None, pattern="^[0-9]{1,2}$")
     alert_escalation_delay_minutes: str | None = Field(default=None, pattern="^[0-9]{1,4}$")
     alert_escalation_check_seconds: str | None = Field(default=None, pattern="^[0-9]{1,3}$")
+    model_alerting_enabled: str | None = Field(default=None, pattern="^(true|false)$")

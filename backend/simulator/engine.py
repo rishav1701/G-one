@@ -111,6 +111,13 @@ def _seed_rows(db: Session, seed: int, clock: SimulatedClock):
                             request_id=_id(seed, f"request-admission-{number}"), created_at=clock.now()))
             admissions[scenario].append(admission)
             patients_by_scenario[scenario].append(patient)
+            if replicate == 0:
+                db.add_all([
+                    LabResult(id=_id(seed, f"lab-{number}-hb"), admission_id=admission.id,
+                              test_code="Haemoglobin", value="136", unit="g/L", measured_at=clock.now(), is_simulated=True),
+                    LabResult(id=_id(seed, f"lab-{number}-crp"), admission_id=admission.id,
+                              test_code="C-reactive protein", value="8", unit="mg/L", measured_at=clock.now(), is_simulated=True),
+                ])
     raw_key = secrets.token_urlsafe(32)
     key_id = _id(seed, "machine-key")
     db.add(ApiKey(id=key_id, key_hash=hashlib.sha256(raw_key.encode()).hexdigest(), scope="ingest:write"))

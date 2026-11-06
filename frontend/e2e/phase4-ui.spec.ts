@@ -30,6 +30,7 @@ test('Phase 4 routes render and fit all required viewports',async({page})=>{
  await page.setViewportSize({width:1440,height:900});
  await page.getByLabel('Username').fill(username);await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in'}).click();
  await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
+ await page.goto('/admin?tab=simulator');await expect(page.getByRole('heading',{name:'Simulator controls'})).toBeVisible();await page.getByRole('button',{name:'Reset simulator'}).click();await page.getByRole('button',{name:'Confirm simulator reset'}).click();await expect(page.getByText(/Simulator reset with seed 42/)).toBeVisible();await page.goto('/dashboard');
  await expect(page.locator('.clinical-table tbody tr').first()).toBeVisible();
  const detailHref=await page.locator('.clinical-table tbody tr a').first().getAttribute('href');
  expect(detailHref).toBeTruthy();

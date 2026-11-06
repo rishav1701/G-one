@@ -212,3 +212,19 @@ class DataSourceStatus(Base):
     is_simulated: Mapped[bool]=mapped_column(Boolean, nullable=False, default=True)
     updated_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False)
     status_code: Mapped[str]=mapped_column(String(40), nullable=False)
+
+class ModelPrediction(Base):
+    __tablename__="model_prediction"
+    __table_args__=(
+        UniqueConstraint("assessment_id", "model_id", "model_version", name="uq_model_prediction_assessment_model"),
+        CheckConstraint("probability >= 0 AND probability <= 1", name="ck_model_prediction_probability"),
+    )
+    id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    assessment_id: Mapped[str]=mapped_column(ForeignKey("risk_assessment.id", ondelete="CASCADE"), nullable=False, index=True)
+    model_id: Mapped[str]=mapped_column(String(120), nullable=False)
+    model_version: Mapped[str]=mapped_column(String(80), nullable=False)
+    probability: Mapped[float]=mapped_column(Numeric(6,5), nullable=False)
+    calibrated: Mapped[bool]=mapped_column(Boolean, nullable=False)
+    feature_hash: Mapped[str]=mapped_column(String(64), nullable=False)
+    explanation: Mapped[dict]=mapped_column(JSON, nullable=False)
+    interface_demo: Mapped[bool]=mapped_column(Boolean, nullable=False, default=False)
