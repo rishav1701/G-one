@@ -2,6 +2,7 @@ import json, logging, uuid
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
+from app.api.clinical import router as clinical_router
 from app.core.config import settings
 from app.core.db import engine
 from app.core.errors import error_handlers
@@ -26,3 +27,4 @@ def health():
     with engine.connect() as connection: connection.execute(text("SELECT 1"))
     return {"status":"ok"}
 app.include_router(auth_router)
+app.include_router(clinical_router)

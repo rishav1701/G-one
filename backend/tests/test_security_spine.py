@@ -9,7 +9,7 @@ def dependency_names(route):
     visit(route.dependant); return found
 def test_every_non_allowlisted_route_is_authenticated():
     routes=[r for r in app.routes if hasattr(r,"path") and hasattr(r,"dependant")]
-    violations=[r.path for r in routes if r.path not in PUBLIC and "current_session" not in dependency_names(r)]
+    violations=[r.path for r in routes if r.path not in PUBLIC and not ({"current_session", "ingestion_auth"} & dependency_names(r))]
     assert violations==[]
 def test_health_route_exists(): assert any(route.path=="/health" for route in app.routes)
 def test_mutating_authenticated_routes_require_session():

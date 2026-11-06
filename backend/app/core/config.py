@@ -10,6 +10,15 @@ class Settings(BaseSettings):
     session_absolute_hours: int = 12
     login_max_failures: int = 5
     login_lock_minutes: int = 15
+    observation_stale_hours: int = 24
+    observation_hard_limits: dict[str, tuple[float, float]] = {
+        "respiration_rate": (1, 100), "spo2": (50, 100), "systolic_bp": (30, 300),
+        "pulse": (20, 300), "temperature": (25, 45),
+    }
+    observation_plausibility_limits: dict[str, tuple[float, float]] = {
+        "respiration_rate": (9, 24), "spo2": (94, 100), "systolic_bp": (101, 219),
+        "pulse": (51, 110), "temperature": (36.1, 38.0),
+    }
     cookie_secure: bool = False
     @property
     def session_secret(self) -> str:
