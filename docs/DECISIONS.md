@@ -11,3 +11,5 @@
 - 2026-11-06: Kept hard input limits and plausibility ranges configurable through environment settings and labelled them as technical validation bounds, not clinical thresholds.
 - 2026-11-06: Set alert level downgrade to two consecutive lower assessments by default, keep returned-to-low alerts open until explicit resolution, and implement escalation as an in-app demonstration record only.
 - 2026-11-06: Kept Track B training fixture-only until the user supplies the M0 data-use/location decision and pre-result acceptance criteria; fixture candidates are always marked unaccepted.
+
+- 2026-11-07: Disable manual observation entry for ADMIN and VIEWER in the UI and explain the required clinical role; API role checks remain authoritative. Phase 4 monitoring graphs use server-returned NEWS2 parameter subscores and presentation-only score bands.

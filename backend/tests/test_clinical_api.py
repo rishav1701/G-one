@@ -117,6 +117,10 @@ def test_ingestion_validation_idempotency_and_recomputation(clinical_data):
     assessments = clinician.get(f"/api/v1/admissions/{clinical_data['admission_a']}/assessments")
     assert assessments.status_code == 200 and assessments.json()[0]["total"] == 0
     assert assessments.json()[0]["level"] == "LOW"
+    monitoring = clinician.get(f"/api/v1/admissions/{clinical_data['admission_a']}/monitoring")
+    assert monitoring.status_code == 200, monitoring.text
+    assert monitoring.json()["items"][0]["values"]["pulse"] == 70
+    assert monitoring.json()["items"][0]["parameter_scores"]["pulse"] == 0
     assert client.post("/api/v1/observations", json=payload, headers=headers).json()["idempotent_replay"] is True
     conflict = dict(payload, pulse=111)
     assert client.post("/api/v1/observations", json=conflict, headers=headers).status_code == 409

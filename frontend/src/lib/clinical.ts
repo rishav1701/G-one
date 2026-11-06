@@ -1,0 +1,11 @@
+export type Level = 'LOW' | 'LOW_MEDIUM' | 'MEDIUM' | 'HIGH' | 'INCOMPLETE' | 'STALE' | 'NO_DATA';
+export type Admission = {id:string;patient_id:string;patient_identifier:string;age_years:number;sex:string;ward_id:string;ward_name:string;bed_label:string;admitted_at:string;spo2_scale:number;status:string};
+export type Assessment = {id:string;admission_id:string;level:Level;total:number;completeness:number;per_parameter_scores:Record<string,number>;explanation:Record<string,unknown>;computed_at:string;observation_ids:string[]};
+export type Observation = {id:string;admission_id:string;measured_at:string;received_at:string;respiration_rate:number|null;spo2:number|null;supplemental_o2:boolean|null;systolic_bp:number|null;pulse:number|null;consciousness:string|null;temperature:string|null;source:string;is_simulated:boolean};
+export type MonitoringPoint = {id:string;measured_at:string;values:Record<string,number|string|boolean|null>;parameter_scores:Record<string,number>;total:number};
+export type Alert = {id:string;admission_id:string;patient_id:string;patient_identifier:string;ward_name:string;bed_label:string;status:string;level:Level;created_at:string;acknowledged_at:string|null;score_returned_to_low:boolean;responses:{assessed_at:string;action:string;notes:string|null}[]};
+export type Page<T> = {items:T[];limit:number;offset:number;total:number};
+export const labels:Record<string,string>={respiration_rate:'Respiration rate',spo2:'Oxygen saturation',supplemental_o2:'Supplemental oxygen',systolic_bp:'Systolic blood pressure',pulse:'Pulse',consciousness:'Consciousness',temperature:'Temperature'};
+export const units:Record<string,string>={respiration_rate:'breaths/min',spo2:'%',supplemental_o2:'',systolic_bp:'mmHg',pulse:'beats/min',consciousness:'',temperature:'°C'};
+export function fmtTime(value?:string|null){if(!value)return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'}).format(new Date(value))+' IST'}
+export function relative(value?:string|null){if(!value)return 'No observation';const mins=Math.max(0,Math.floor((Date.now()-new Date(value).getTime())/60000));const hours=Math.floor(mins/60);return mins<1?'Less than 1 min ago':mins<60?`${mins} min ago`:hours<24?`${hours} h ago`:`${Math.floor(hours/24)} d ago`}

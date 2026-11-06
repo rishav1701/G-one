@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session as DBSession
 from app.api.auth import current_session
 from app.core.db import get_db
 from app.domain.clock import SystemClock
+from app.domain.news2 import PARAMETERS, SpO2Scale, calculate_news2
 from app.models.base import Admission, AppUser, AuditLog, Observation, Patient, RiskAssessment, Role, UserWard
 from app.schemas.clinical import AdmissionResponse, ObservationResponse, PageResponse, PatientPageResponse, PatientResponse, RiskAssessmentResponse
 from app.services.clinical import _audit, _visible_ward_ids, admission_payload, record_observation, refresh_current_assessment
@@ -132,6 +133,31 @@ def list_observations(
     return rows
 
 
+@router.get("/admissions/{admission_id}/monitoring")
+def list_monitoring_points(
+    admission_id: str, request: Request,
+    limit: int = Query(500, ge=1, le=1000), offset: int = Query(0, ge=0),
+    user: AppUser = Depends(current_session), db: DBSession = Depends(get_db),
+):
+    admission = db.scalar(_scoped_admissions(db, user).where(Admission.id == admission_id))
+    if admission is None:
+        raise HTTPException(status_code=404, detail="Admission not found")
+    rows = db.scalars(select(Observation).where(
+        Observation.admission_id == admission_id, Observation.status == "VALID",
+    ).order_by(Observation.measured_at.desc()).limit(limit).offset(offset)).all()
+    points = []
+    for row in rows:
+        values = {name: getattr(row, name) for name in PARAMETERS}
+        score = calculate_news2(values, spo2_scale=SpO2Scale(admission.spo2_scale))
+        points.append({
+            "id": row.id, "measured_at": row.measured_at, "values": values,
+            "parameter_scores": score.scores, "total": score.total,
+        })
+    _audit(db, request, user.id, "monitoring.read", "admission", admission_id)
+    db.commit()
+    return {"items": list(reversed(points)), "limit": limit, "offset": offset}
+
+
 @router.get("/admissions/{admission_id}/assessments", response_model=list[RiskAssessmentResponse])
 def list_assessments(
     admission_id: str, request: Request,
@@ -143,7 +169,10 @@ def list_assessments(
         raise HTTPException(status_code=404, detail="Admission not found")
     clock = getattr(request.app.state, "clock", SystemClock())
     now = clock.now()
-    refresh_current_assessment(db, admission, now, request.state.request_id)
+    # Persisted simulator assessments represent deterministic scenario steps. Keep their
+    # expected states visible until an explicit simulated-clock action recomputes them.
+    if not admission.is_simulated or hasattr(clock, "current"):
+        refresh_current_assessment(db, admission, now, request.state.request_id)
     rows = db.scalars(select(RiskAssessment).where(RiskAssessment.admission_id == admission_id).order_by(RiskAssessment.computed_at.desc()).limit(limit).offset(offset)).all()
     _audit(db, request, user.id, "assessment.list", "admission", admission_id)
     db.commit()

@@ -42,7 +42,7 @@ def _alert_payload(db: DBSession, alert: Alert):
     responses = db.scalars(select(ClinicalResponse).where(ClinicalResponse.alert_id == alert.id).order_by(ClinicalResponse.assessed_at, ClinicalResponse.id)).all()
     escalations = db.scalars(select(Escalation).where(Escalation.alert_id == alert.id)).all()
     return {
-        "id": alert.id, "admission_id": admission.id, "patient_identifier": patient.patient_identifier,
+        "id": alert.id, "admission_id": admission.id, "patient_id": patient.id, "patient_identifier": patient.patient_identifier,
         "ward_name": ward.name, "bed_label": admission.bed_label,
         "status": alert.status, "level": alert.level,
         "created_at": alert.created_at, "acknowledged_at": alert.acknowledged_at,
