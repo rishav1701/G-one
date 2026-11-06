@@ -23,6 +23,7 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-gone}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-gone}
       APP_SECRET: ${APP_SECRET:?Run scripts/init-env.ps1 first}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8080}
+      GONE_ROOT: /app
       SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-phaseadmin}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
     depends_on:

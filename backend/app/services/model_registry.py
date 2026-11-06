@@ -1,6 +1,7 @@
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 
 import joblib
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.base import Admission, ModelPrediction, Observation, Patient, RiskAssessment
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(os.environ.get("GONE_ROOT", Path(__file__).resolve().parents[3])).resolve()
 ACTIVE_DIR = ROOT / "models" / "active"
 REQUIRED_MANIFEST = {
     "model_id", "version", "created_at", "algorithm", "feature_contract_version",
