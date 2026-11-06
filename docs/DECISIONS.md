@@ -9,3 +9,5 @@
 - 2026-11-06: Changed the mobile shell header to a three-row grid after the 390 px screenshot review found overflow; the Playwright no-scroll assertion now passes.
 - 2026-11-06: Compared the Phase 2 scoring bands with RCP NEWS2 Chart 1; no difference was found, while clinician verification remains required before clinical use.
 - 2026-11-06: Kept hard input limits and plausibility ranges configurable through environment settings and labelled them as technical validation bounds, not clinical thresholds.
+- 2026-11-06: Set alert level downgrade to two consecutive lower assessments by default, keep returned-to-low alerts open until explicit resolution, and implement escalation as an in-app demonstration record only.
+- 2026-11-06: Kept Track B training fixture-only until the user supplies the M0 data-use/location decision and pre-result acceptance criteria; fixture candidates are always marked unaccepted.

@@ -62,6 +62,7 @@ class Patient(Base):
     patient_identifier: Mapped[str]=mapped_column(String(16), unique=True, nullable=False, index=True)
     age_years: Mapped[int]=mapped_column(Integer, nullable=False)
     sex: Mapped[str]=mapped_column(String(20), nullable=False)
+    is_simulated: Mapped[bool]=mapped_column(Boolean, nullable=False, default=False)
 
 class Admission(Base):
     __tablename__="admission"
@@ -69,6 +70,7 @@ class Admission(Base):
         CheckConstraint("spo2_scale IN (1, 2)", name="ck_admission_spo2_scale"),
         CheckConstraint("status IN ('ACTIVE', 'DISCHARGED')", name="ck_admission_status"),
         CheckConstraint("discharged_at IS NULL OR discharged_at >= admitted_at", name="ck_admission_dates"),
+        CheckConstraint("simulation_scenario IS NULL OR simulation_scenario IN ('stable', 'gradual_deterioration', 'sudden_concerning_change', 'missing_observations', 'sensor_disconnection', 'data_quality_problems')", name="ck_admission_simulation_scenario"),
         Index("ix_admission_ward_status", "ward_id", "status"),
     )
     id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
@@ -79,6 +81,8 @@ class Admission(Base):
     discharged_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True), nullable=True)
     spo2_scale: Mapped[int]=mapped_column(Integer, nullable=False, default=1)
     status: Mapped[str]=mapped_column(String(20), nullable=False, default="ACTIVE")
+    is_simulated: Mapped[bool]=mapped_column(Boolean, nullable=False, default=False)
+    simulation_scenario: Mapped[str|None]=mapped_column(String(40), nullable=True)
 
 class Observation(Base):
     __tablename__="observation"
@@ -144,3 +148,67 @@ class RiskAssessment(Base):
     total: Mapped[int]=mapped_column(Integer, nullable=False)
     explanation: Mapped[dict]=mapped_column(JSON, nullable=False)
     computed_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False, default=now_utc)
+
+class Alert(Base):
+    __tablename__="alert"
+    __table_args__=(
+        CheckConstraint("status IN ('OPEN', 'ACKNOWLEDGED', 'RESOLVED')", name="ck_alert_status"),
+        CheckConstraint("level IN ('LOW_MEDIUM', 'MEDIUM', 'HIGH')", name="ck_alert_level"),
+        Index("uq_alert_one_open_per_admission", "admission_id", unique=True, postgresql_where=text("status IN ('OPEN', 'ACKNOWLEDGED')")),
+        Index("ix_alert_status_level_created", "status", "level", "created_at"),
+    )
+    id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    admission_id: Mapped[str]=mapped_column(ForeignKey("admission.id", ondelete="RESTRICT"), nullable=False)
+    status: Mapped[str]=mapped_column(String(20), nullable=False, default="OPEN")
+    level: Mapped[str]=mapped_column(String(20), nullable=False)
+    latest_assessment_id: Mapped[str]=mapped_column(ForeignKey("risk_assessment.id", ondelete="RESTRICT"), nullable=False)
+    created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False, default=now_utc)
+    acknowledged_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_by: Mapped[str|None]=mapped_column(ForeignKey("app_user.id", ondelete="SET NULL"), nullable=True)
+    resolved_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_by: Mapped[str|None]=mapped_column(ForeignKey("app_user.id", ondelete="SET NULL"), nullable=True)
+    consecutive_lower: Mapped[int]=mapped_column(Integer, nullable=False, default=0)
+    score_returned_to_low: Mapped[bool]=mapped_column(Boolean, nullable=False, default=False)
+    last_score_level: Mapped[str]=mapped_column(String(20), nullable=False)
+
+class AlertEvent(Base):
+    __tablename__="alert_event"
+    id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    alert_id: Mapped[str]=mapped_column(ForeignKey("alert.id", ondelete="RESTRICT"), nullable=False, index=True)
+    actor_id: Mapped[str|None]=mapped_column(ForeignKey("app_user.id", ondelete="SET NULL"), nullable=True)
+    event_type: Mapped[str]=mapped_column(String(40), nullable=False)
+    from_level: Mapped[str|None]=mapped_column(String(20), nullable=True)
+    to_level: Mapped[str|None]=mapped_column(String(20), nullable=True)
+    detail_code: Mapped[str|None]=mapped_column(String(60), nullable=True)
+    created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False)
+
+class ClinicalResponse(Base):
+    __tablename__="clinical_response"
+    __table_args__=(CheckConstraint("length(notes) <= 500", name="ck_clinical_response_notes_length"), CheckConstraint("action IN ('CLINICAL_REVIEW', 'OBSERVATIONS_REPEATED', 'LOCAL_ESCALATION', 'OTHER')", name="ck_clinical_response_action"))
+    id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    alert_id: Mapped[str]=mapped_column(ForeignKey("alert.id", ondelete="RESTRICT"), nullable=False, index=True)
+    assessed_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False)
+    action: Mapped[str]=mapped_column(String(40), nullable=False)
+    escalated_to_role: Mapped[str|None]=mapped_column(String(40), nullable=True)
+    notes: Mapped[str|None]=mapped_column(String(500), nullable=True)
+    actor_id: Mapped[str]=mapped_column(ForeignKey("app_user.id", ondelete="RESTRICT"), nullable=False)
+
+class Escalation(Base):
+    __tablename__="escalation"
+    __table_args__=(UniqueConstraint("alert_id", name="uq_escalation_alert"), CheckConstraint("target_role = 'SENIOR_CLINICIAN'", name="ck_escalation_target_role"))
+    id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    alert_id: Mapped[str]=mapped_column(ForeignKey("alert.id", ondelete="RESTRICT"), nullable=False)
+    ward_id: Mapped[str]=mapped_column(ForeignKey("ward.id", ondelete="RESTRICT"), nullable=False)
+    target_role: Mapped[str]=mapped_column(String(40), nullable=False, default="SENIOR_CLINICIAN")
+    created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False)
+
+class DataSourceStatus(Base):
+    __tablename__="data_source_status"
+    __table_args__=(UniqueConstraint("source", name="uq_data_source_status_source"),)
+    id: Mapped[str]=mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    source: Mapped[str]=mapped_column(String(40), nullable=False)
+    ward_id: Mapped[str|None]=mapped_column(ForeignKey("ward.id", ondelete="CASCADE"), nullable=True)
+    connected: Mapped[bool]=mapped_column(Boolean, nullable=False)
+    is_simulated: Mapped[bool]=mapped_column(Boolean, nullable=False, default=True)
+    updated_at: Mapped[datetime]=mapped_column(DateTime(timezone=True), nullable=False)
+    status_code: Mapped[str]=mapped_column(String(40), nullable=False)

@@ -1,0 +1,24 @@
+feature_contract_version: "1.0"
+observation_window_hours: 72
+prediction_horizon_hours: 6
+raw_parameters:
+  - respiration_rate
+  - spo2
+  - systolic_bp
+  - pulse
+  - temperature
+  - supplemental_o2
+  - consciousness
+rolling_windows_hours: [6, 24, 72]
+split:
+  train: 0.60
+  validation: 0.15
+  calibration: 0.10
+  test: 0.15
+random_seed: 1729
+grouped_cv_folds: 4
+max_train_hours: 0.10
+bootstrap_replicates: 100
+bootstrap_seed: 2026
+news2_reference_alert_total: 5
+fixture_only: true

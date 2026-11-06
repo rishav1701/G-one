@@ -1,14 +1,47 @@
-import json, logging, uuid
+import asyncio, json, logging, uuid
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
+from app.api.alerts import router as alerts_router
 from app.api.clinical import router as clinical_router
 from app.core.config import settings
-from app.core.db import engine
+from app.core.db import engine, SessionLocal
 from app.core.errors import error_handlers
+from app.domain.clock import SystemClock
+from app.services.alerts import ensure_escalations, setting
 from sqlalchemy import text
 settings.session_secret
-app=FastAPI(title="G One API",version="0.1.0",openapi_url="/api/v1/openapi.json")
+
+async def escalation_worker(app: FastAPI):
+    while True:
+        db = SessionLocal()
+        try:
+            interval = max(1, min(300, int(setting(db, "alert_escalation_check_seconds"))))
+            ensure_escalations(db, app.state.clock.now())
+            db.commit()
+        except Exception:
+            db.rollback()
+            logging.exception("Escalation demonstration loop failed")
+            interval = 10
+        finally:
+            db.close()
+        await asyncio.sleep(interval)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.clock = SystemClock()
+    task = asyncio.create_task(escalation_worker(app))
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+app=FastAPI(title="G One API",version="0.1.0",openapi_url="/api/v1/openapi.json",lifespan=lifespan)
 error_handlers(app)
 app.add_middleware(CORSMiddleware,allow_origins=[settings.frontend_origin],allow_credentials=True,allow_methods=["GET","POST","PUT","PATCH","DELETE"],allow_headers=["Content-Type","X-CSRF-Token","X-API-Key","Idempotency-Key","X-Request-ID"])
 @app.middleware("http")
@@ -28,3 +61,4 @@ def health():
     return {"status":"ok"}
 app.include_router(auth_router)
 app.include_router(clinical_router)
+app.include_router(alerts_router)

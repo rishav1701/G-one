@@ -47,7 +47,8 @@ def _authorized_ingestor(request: Request, db: DBSession) -> tuple[str | None, b
 
 def _reject(db: DBSession, request: Request, admission_id: str | None, code: str, source: str):
     safe_source = source if isinstance(source, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,40}", source) else "unknown"
-    rejection = IngestionRejection(admission_id=admission_id, reason_code=code, source=safe_source)
+    clock = getattr(request.app.state, "clock", SystemClock())
+    rejection = IngestionRejection(admission_id=admission_id, reason_code=code, source=safe_source, received_at=clock.now())
     db.add(rejection)
     db.flush()
     _audit(db, request, None, "observation.rejected", "ingestion_rejection", rejection.id)
@@ -106,7 +107,13 @@ def persist_assessment(db: DBSession, admission: Admission, now) -> RiskAssessme
     result = calculate_news2(
         values, spo2_scale=SpO2Scale(admission.spo2_scale), stale=stale, no_data=no_data,
     )
+    deterministic_id = str(uuid.uuid5(uuid.NAMESPACE_URL, "gone-assessment:" + ":".join(sorted(row.id for row in source_rows)))) if source_rows and all(row.is_simulated for row in source_rows) else None
+    if deterministic_id:
+        existing = db.get(RiskAssessment, deterministic_id)
+        if existing:
+            return existing
     record = RiskAssessment(
+        id=deterministic_id or str(uuid.uuid4()),
         admission_id=admission.id, scoring_version=result.scoring_version,
         spo2_scale=admission.spo2_scale, observation_ids=sorted(row.id for row in source_rows),
         per_parameter_scores=result.scores, completeness=result.completeness,
@@ -114,6 +121,23 @@ def persist_assessment(db: DBSession, admission: Admission, now) -> RiskAssessme
     )
     db.add(record)
     return record
+
+
+def refresh_current_assessment(db: DBSession, admission: Admission, now, request_id: str | None = None) -> RiskAssessment:
+    values, source_rows, stale = _current_assessment_values(db, admission, now)
+    expected = calculate_news2(
+        values, spo2_scale=SpO2Scale(admission.spo2_scale), stale=stale,
+        no_data=not source_rows and not stale,
+    )
+    latest = db.scalar(select(RiskAssessment).where(RiskAssessment.admission_id == admission.id).order_by(RiskAssessment.computed_at.desc()).limit(1))
+    ids = sorted(row.id for row in source_rows)
+    if latest and latest.observation_ids == ids and latest.explanation == expected.explanation():
+        return latest
+    assessment = persist_assessment(db, admission, now)
+    db.flush()
+    from app.services.alerts import apply_assessment_to_alert
+    apply_assessment_to_alert(db, admission, assessment, now, request_id=request_id)
+    return assessment
 
 
 def recompute_stored_assessment(db: DBSession, assessment_id: str) -> Assessment:
@@ -175,8 +199,9 @@ def record_observation(
             return existing, True, plausibility_warnings(data)
         _reject(db, request, admission.id, "IDEMPOTENCY_CONFLICT", data.source)
         raise HTTPException(status_code=409, detail="Source record conflicts with an earlier submission")
+    row_id = str(uuid.uuid5(uuid.UUID(admission.id), f"{data.source}:{data.source_record_id}")) if data.is_simulated else str(uuid.uuid4())
     row = Observation(
-        id=str(uuid.uuid4()), admission_id=admission.id, measured_at=data.measured_at,
+        id=row_id, admission_id=admission.id, measured_at=data.measured_at,
         received_at=now, respiration_rate=data.respiration_rate, spo2=data.spo2,
         supplemental_o2=data.supplemental_o2, systolic_bp=data.systolic_bp, pulse=data.pulse,
         consciousness=data.consciousness, temperature=data.temperature, source=data.source,
@@ -184,8 +209,11 @@ def record_observation(
         entered_by=None if is_machine else actor_id, status="VALID", payload_hash=payload_hash,
     )
     db.add(row)
+    db.flush()
     assessment = persist_assessment(db, admission, now)
     db.flush()
+    from app.services.alerts import apply_assessment_to_alert
+    apply_assessment_to_alert(db, admission, assessment, now, actor_id, getattr(request.state, "request_id", None))
     _audit(db, request, actor_id, "observation.accepted", "observation", row.id)
     _audit(db, request, actor_id, "assessment.computed", "risk_assessment", assessment.id)
     db.commit()

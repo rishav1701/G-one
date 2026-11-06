@@ -125,3 +125,26 @@ class RiskAssessmentResponse(BaseModel):
     total: int
     explanation: dict[str, object]
     computed_at: datetime
+
+
+class AlertActionInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    assessed_at: datetime
+    action: str = Field(pattern="^(CLINICAL_REVIEW|OBSERVATIONS_REPEATED|LOCAL_ESCALATION|OTHER)$")
+    escalated_to_role: str | None = Field(default=None, pattern="^(CLINICIAN|SENIOR_CLINICIAN)$")
+    notes: str | None = Field(default=None, max_length=500)
+
+    @field_validator("assessed_at")
+    @classmethod
+    def require_aware_assessed_at(cls, value: datetime):
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("assessed_at must include a timezone")
+        return value
+
+
+class OperationalSettingsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    minimum_alert_level: str | None = Field(default=None, pattern="^(LOW_MEDIUM|MEDIUM|HIGH)$")
+    alert_downgrade_assessments: str | None = Field(default=None, pattern="^[0-9]{1,2}$")
+    alert_escalation_delay_minutes: str | None = Field(default=None, pattern="^[0-9]{1,4}$")
+    alert_escalation_check_seconds: str | None = Field(default=None, pattern="^[0-9]{1,3}$")

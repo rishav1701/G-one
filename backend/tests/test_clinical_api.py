@@ -12,8 +12,9 @@ from app.core.db import SessionLocal
 from app.domain.news2 import calculate_news2
 from app.main import app
 from app.models.base import (
-    Admission, ApiKey, AppUser, AuditLog, IngestionRejection, Observation,
-    Patient, RiskAssessment, Role, Session, UserWard, Ward,
+    Admission, Alert, AlertEvent, ApiKey, AppUser, AuditLog, ClinicalResponse,
+    Escalation, IngestionRejection, Observation, Patient, RiskAssessment,
+    Role, Session, UserWard, Ward,
 )
 from app.services.clinical import recompute_stored_assessment
 
@@ -64,7 +65,11 @@ def clinical_data():
     assessment_ids = [row[0] for row in db.query(RiskAssessment.id).filter(RiskAssessment.admission_id.in_(admission_ids)).all()]
     rejection_ids = [row[0] for row in db.query(IngestionRejection.id).filter(IngestionRejection.source == f"test-{bundle['suffix']}").all()]
     db.query(Session).filter(Session.user_id.in_(user_ids)).delete(synchronize_session=False)
-    db.query(AuditLog).filter((AuditLog.actor_id.in_(user_ids)) | (AuditLog.object_id.in_(observation_ids + assessment_ids + rejection_ids + admission_ids + patient_ids))).delete(synchronize_session=False)
+    alert_ids = [row[0] for row in db.query(Alert.id).filter(Alert.admission_id.in_(admission_ids)).all()]
+    db.query(AlertEvent).filter(AlertEvent.alert_id.in_(alert_ids)).delete(synchronize_session=False)
+    db.query(ClinicalResponse).filter(ClinicalResponse.alert_id.in_(alert_ids)).delete(synchronize_session=False)
+    db.query(Escalation).filter(Escalation.alert_id.in_(alert_ids)).delete(synchronize_session=False)
+    db.query(Alert).filter(Alert.id.in_(alert_ids)).delete(synchronize_session=False)
     db.query(RiskAssessment).filter(RiskAssessment.admission_id.in_(admission_ids)).delete(synchronize_session=False)
     db.query(Observation).filter(Observation.admission_id.in_(admission_ids)).delete(synchronize_session=False)
     db.query(IngestionRejection).filter(IngestionRejection.source == f"test-{bundle['suffix']}").delete(synchronize_session=False)
@@ -111,6 +116,7 @@ def test_ingestion_validation_idempotency_and_recomputation(clinical_data):
     assert observations.json()[0]["pulse"] == 70
     assessments = clinician.get(f"/api/v1/admissions/{clinical_data['admission_a']}/assessments")
     assert assessments.status_code == 200 and assessments.json()[0]["total"] == 0
+    assert assessments.json()[0]["level"] == "LOW"
     assert client.post("/api/v1/observations", json=payload, headers=headers).json()["idempotent_replay"] is True
     conflict = dict(payload, pulse=111)
     assert client.post("/api/v1/observations", json=conflict, headers=headers).status_code == 409

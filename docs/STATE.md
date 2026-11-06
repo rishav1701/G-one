@@ -1,8 +1,8 @@
 # Project state
 
-- Current phase: Phase 2 complete; Phase 3 is next.
-- Completed: Phase 0 reconnaissance/planning; Phase 1 security foundation and UI gate; Phase 2 NEWS2 engine, PostgreSQL clinical schema, single-observation ingestion, ward-scoped clinical reads, persisted/reproducible assessments, and NEWS2 100% branch-coverage gate.
-- Product code: Phase 1 and Phase 2 gates passed. Evidence is in docs/reports/phase-1.md and docs/reports/phase-2.md. Clinical scoring comparison and review notice are in docs/CLINICAL_METHODOLOGY.md.
-- Open risks: Docker Desktop engine is unavailable; Phases 1 and 2 were verified with a local PostgreSQL 17.11 cluster and portable Python runtime under ignored .tools. A qualified clinician must still verify the NEWS2 implementation before any clinical use. gitleaks availability remains unverified for hardening.
-- Track B: pending user M0 data decision and later user-run local training. Neither blocks the application.
-- Last checkpoint: Phase 2 gate changes are ready to commit.
+- Current phase: Phase 3 complete; Phase 4 is next.
+- Completed: Phases 0–3. Phase 3 includes persisted freshness-aware assessments, alert lifecycle and escalation, append-only audit events, operational settings, and a deterministic six-scenario simulator with at least 12 synthetic patients across two wards.
+- Product gates: Phase 1 UI/auth foundation, Phase 2 clinical core, Phase 3 assessment/alerts/simulator, and Track B M1/M2 fixture pipeline gates passed. Evidence is in `docs/reports/phase-1.md`, `docs/reports/phase-2.md`, and `docs/reports/phase-3.md`.
+- Track B status: fixture-only pipeline and candidate artifact verified. The candidate is explicitly unaccepted and inactive. M0 data governance and later approved-data training remain pending and do not block application work.
+- Open risks: Docker engine and Compose startup remain unverified. A qualified clinician must review NEWS2 before any clinical use. The system is a simulated demonstration, not for clinical use.
+- Last checkpoint: Phase 3 and Track B M1/M2 gates passed; proceed to Phase 4 frontend core.

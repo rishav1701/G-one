@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.api.auth import current_session
 from app.core.db import get_db
+from app.domain.clock import SystemClock
 from app.models.base import Admission, AppUser, AuditLog, Observation, Patient, RiskAssessment, Role, UserWard
 from app.schemas.clinical import AdmissionResponse, ObservationResponse, PageResponse, PatientPageResponse, PatientResponse, RiskAssessmentResponse
-from app.services.clinical import _audit, _visible_ward_ids, admission_payload, record_observation
+from app.services.clinical import _audit, _visible_ward_ids, admission_payload, record_observation, refresh_current_assessment
 
 router = APIRouter(prefix="/api/v1", tags=["clinical"])
 
@@ -32,7 +33,7 @@ def _scoped_admissions(db: DBSession, user: AppUser):
 
 @router.post("/observations", response_model=ObservationResponse, status_code=201, dependencies=[Depends(ingestion_auth)])
 def submit_observation(payload: dict, request: Request, db: DBSession = Depends(get_db)):
-    row, replay, warnings = record_observation(db, request, payload)
+    row, replay, warnings = record_observation(db, request, payload, getattr(request.app.state, "clock", None))
     return {
         "id": row.id, "admission_id": row.admission_id, "measured_at": row.measured_at,
         "received_at": row.received_at, "status": row.status,
@@ -140,6 +141,9 @@ def list_assessments(
     admission = db.scalar(_scoped_admissions(db, user).where(Admission.id == admission_id))
     if admission is None:
         raise HTTPException(status_code=404, detail="Admission not found")
+    clock = getattr(request.app.state, "clock", SystemClock())
+    now = clock.now()
+    refresh_current_assessment(db, admission, now, request.state.request_id)
     rows = db.scalars(select(RiskAssessment).where(RiskAssessment.admission_id == admission_id).order_by(RiskAssessment.computed_at.desc()).limit(limit).offset(offset)).all()
     _audit(db, request, user.id, "assessment.list", "admission", admission_id)
     db.commit()
