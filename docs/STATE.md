@@ -1,8 +1,8 @@
 # Project state
 
-- Current phase: Phase 0 complete; Phase 1 is next but not started.
-- Completed: repository reconnaissance; environment probe; project rules saved in `AGENTS.md`; planning and Track B input templates drafted; required directory skeleton created; baseline and phase report committed.
-- Product code: none.
-- Open risks: Python executable is a Windows Store alias that could not launch; PostgreSQL is absent; Docker CLI is available but its daemon is unreachable; outbound network lookup failed; Playwright and Chromium are absent; gitleaks is absent. Python, PostgreSQL, Docker services, browser flows, and visual UI gates remain UNVERIFIED.
-- Track B: pending user data decision record and (later) user-run local training. Neither blocks the application.
-- Last commit: `111cf01` baseline; Phase 0 report/state update follows in the next commit.
+- Current phase: Phase 1 attempted; backend and browser exit-gate items remain unverified, so Phase 2 has not started.
+- Completed: Phase 0 reconnaissance/planning; Phase 1 foundation source; frontend production build, type-check, Vitest, raw-value scan, and contrast checks pass.
+- Product code: Phase 1 foundational backend/frontend source is present but the backend is not runtime-verified. See docs/reports/phase-1.md.
+- Open risks: Python Windows Store alias cannot launch; PostgreSQL absent; Docker daemon unreachable; Playwright/Chromium and gitleaks absent. Backend runtime, migration, backend tests, browser login, and visual gate are UNVERIFIED.
+- Track B: pending user M0 data decision and later user-run local training. Neither blocks the application.
+- Last checkpoint: Phase 1 foundation commit. Working tree is clean.
