@@ -25,6 +25,25 @@ Analytics and patient detail additions were reviewed at 1440×900, 1024×768, an
 
 Analytics displays database-derived operational metrics, the six seeded scenario outcomes labelled as demonstration behaviour, and model evaluation only when verified metrics exist. Patient overview states that no trained model is deployed; the NEWS2 badge remains visible. Lab rows are identified as simulated. Raw style-value checks passed. Contrast pairs: body 17.06:1, secondary 7.24:1, primary 6.44:1, banner 17.85:1, LOW 6.81:1, LOW_MEDIUM 6.62:1, MEDIUM 6.88:1, HIGH 5.91:1.
 
+# UI Review — Phase 7
+
+The full browser suite was rerun after dependency hardening. Every route and viewport row in Phases 1, 4, 5, and 6 passed, and the suite completed without browser console errors. The table below records the route inventory; Phase 4, 5, and 6 Playwright tests run axe-core at all three viewports (51 scans total), check page-level width, and retain screenshots in the phase evidence folders.
+
+| Route | 1440×900 | 1024×768 | 390×844 | Evidence |
+|---|---|---|---|---|
+| Login and application shell | PASS | PASS | PASS | `docs/screens/phase-1/` |
+| Dashboard | PASS | PASS | PASS | `docs/screens/phase-4/dashboard-*.png` |
+| Patient directory | PASS | PASS | PASS | `docs/screens/phase-4/patients-*.png` |
+| Patient overview and scenario states | PASS | PASS | PASS | `docs/screens/phase-4/patient-overview-*.png` |
+| Patient monitoring | PASS | PASS | PASS | `docs/screens/phase-4/patient-monitoring-*.png` |
+| Patient labs | PASS | PASS | PASS | `docs/screens/phase-6/patient-labs-*.png` |
+| Patient alerts and responses | PASS | PASS | PASS | `docs/screens/phase-4/patient-timeline-*.png` |
+| Alert centre | PASS | PASS | PASS | `docs/screens/phase-5/alerts-*.png` |
+| Administration — users, settings, status, audit, simulator | PASS | PASS | PASS | `docs/screens/phase-5/admin-*-*.png` |
+| Analytics | PASS | PASS | PASS | `docs/screens/phase-6/analytics-*.png` |
+
+The seeded browser journeys cover stable, gradual deterioration, sudden concerning change, missing observations, sensor disconnection, and data quality. Raw-value and contrast scripts passed. Pattern review found no gradients, emojis, raw hex outside token definitions, or radii above 8px except the full-radius status badge. One shadow level remains on the dialog, as permitted by the design contract. The dialog uses borders elsewhere.
+
 The mobile shell initially overflowed at 390 px. The top bar was changed to a three-row grid, and the rerun passed both the browser scroll-width assertion and manual visual review.
 
 # UI Review — Phase 4

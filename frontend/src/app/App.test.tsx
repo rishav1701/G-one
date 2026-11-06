@@ -1,2 +1,2 @@
 import {render,screen,waitFor} from '@testing-library/react';import {MemoryRouter} from 'react-router-dom';import {test,expect} from 'vitest';import App from './App';
-test('unknown route redirects to dashboard and keeps simulation notice visible',async()=>{render(<MemoryRouter future={{v7_startTransition:true,v7_relativeSplatPath:true}} initialEntries={['/missing']}><App/></MemoryRouter>);await waitFor(()=>expect(screen.getByText(/SIMULATED DATA/)).toBeInTheDocument())});
+test('unknown route redirects to dashboard and keeps simulation notice visible',async()=>{render(<MemoryRouter initialEntries={['/missing']}><App/></MemoryRouter>);await waitFor(()=>expect(screen.getByText(/SIMULATED DATA/)).toBeInTheDocument())});

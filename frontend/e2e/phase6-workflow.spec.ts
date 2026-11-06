@@ -3,7 +3,8 @@ import AxeBuilder from '@axe-core/playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 const username=process.env.E2E_USERNAME||'phaseadmin';
-const password=process.env.E2E_PASSWORD||'Phase1-Rotated-Passphrase-2026!';
+const password=process.env.E2E_PASSWORD;
+if(!password)throw new Error('Set E2E_PASSWORD to the generated local demo admin password before running browser tests.');
 const screenshots=path.resolve(process.cwd(),'..','docs','screens','phase-6');
 const sizes=[[1440,900],[1024,768],[390,844]] as const;
 async function capture(page:Page,name:string){for(const [width,height] of sizes){await page.setViewportSize({width,height});await expect(page.getByText('SIMULATED DATA. DEMONSTRATION ONLY. NOT FOR CLINICAL USE.')).toBeVisible();const pageWidth=await page.evaluate(()=>({width:document.body.scrollWidth,clipped:getComputedStyle(document.documentElement).overflowX==='clip'}));expect(pageWidth.width<=width&&pageWidth.clipped,`${name} page-level overflow at ${width}`).toBeTruthy();await page.screenshot({path:path.join(screenshots,`${name}-${width}x${height}.png`),fullPage:true});const results=await new AxeBuilder({page}).analyze();const serious=results.violations.filter(item=>item.impact==='serious'||item.impact==='critical');expect(serious.map(item=>({id:item.id,impact:item.impact,help:item.help,nodes:item.nodes.map(node=>node.target)})),`${name} ${width}x${height} axe violations`).toEqual([])}}
