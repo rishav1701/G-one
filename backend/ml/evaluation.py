@@ -52,7 +52,9 @@ def matched_sensitivity_threshold(y, probability, reference_alert):
         sensitivity = float(np.sum((probability >= threshold) & (y == 1)) / positives) if positives else 0.0
         scored.append((abs(sensitivity-reference_sensitivity), -threshold, threshold, sensitivity))
     _, _, threshold, sensitivity = min(scored) if scored else (0.0, 0.0, 1.0, 0.0)
-    return float(threshold), reference_sensitivity, sensitivity
+    # A threshold above 1 is only a sentinel for the no-alert case. It is not
+    # a usable probability threshold, so expose it as unavailable in metrics.
+    return (None if threshold > 1.0 else float(threshold)), reference_sensitivity, sensitivity
 
 
 def evaluate_test_set(y, probability, features, rows, outcomes_by_patient, config, evaluation_threshold=0.5):
@@ -65,7 +67,7 @@ def evaluate_test_set(y, probability, features, rows, outcomes_by_patient, confi
         y, probability, evaluation_threshold, rows["patient_id"].astype(str),
         int(config["bootstrap_seed"]), int(config["bootstrap_replicates"]),
     )
-    alerts = int(np.sum(probability >= threshold))
+    alerts = int(np.sum(probability >= threshold)) if threshold is not None else 0
     patient_days = 0.0
     detection_lead_hours = []
     for index, row in rows.reset_index(drop=True).iterrows():

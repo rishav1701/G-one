@@ -72,6 +72,15 @@ def test_matched_sensitivity_threshold_is_bounded_by_reference():
     assert 0 <= threshold <= 1
 
 
+def test_zero_reference_sensitivity_with_probability_one_has_no_usable_threshold():
+    threshold, reference, achieved = matched_sensitivity_threshold(
+        [0, 1], [0.2, 1.0], [False, False]
+    )
+    assert threshold is None
+    assert reference == 0.0
+    assert achieved == 0.0
+
+
 def test_fixture_pipeline_writes_hashed_candidate_and_aggregate_metrics():
     output = ROOT.parent / ".tools" / "ml-test-candidate"
     manifest = run_pipeline(output_dir=output, fixture=True)

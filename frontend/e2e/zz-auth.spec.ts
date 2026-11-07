@@ -10,7 +10,13 @@ const wrongPassword=randomBytes(24).toString('base64url');
 const repo=path.resolve(process.cwd(),'..');
 const screenshots=path.join(repo,'docs','screens','phase-1');
 const psql=process.env.PSQL_PATH||path.join(repo,'.tools','postgresql-17','bin','psql.exe');
-function sql(statement:string){execFileSync(psql,['-h','127.0.0.1','-U','postgres','-d','gone','-v','ON_ERROR_STOP=1','-c',statement],{stdio:'pipe',env:{...process.env,PGPASSWORD:''}})}
+const databaseUrl=new URL(process.env.E2E_DATABASE_URL||process.env.DATABASE_URL||'postgresql://gone:gone@127.0.0.1:5432/gone');
+const databaseHost=databaseUrl.hostname;
+const databasePort=databaseUrl.port||'5432';
+const databaseUser=decodeURIComponent(databaseUrl.username);
+const databasePassword=decodeURIComponent(databaseUrl.password);
+const databaseName=databaseUrl.pathname.replace(/^\//,'');
+function sql(statement:string){execFileSync(psql,['-h',databaseHost,'-p',databasePort,'-U',databaseUser,'-d',databaseName,'-v','ON_ERROR_STOP=1','-c',statement],{stdio:'pipe',env:{...process.env,PGPASSWORD:databasePassword}})}
 
 test('login, change password, no-CSRF rejection, and login at three viewports',async({page})=>{
   await page.goto('/login');
