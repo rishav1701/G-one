@@ -14,8 +14,8 @@ This release contains the Phase 0–8 simulated demonstration implementation. Th
 ## Known limitations
 
 - Not for clinical use. NEWS2 requires qualified local clinician review against the official chart and escalation policy.
-- No real-data model is trained or deployed. Synthetic metrics and simulator outcomes are not clinical-performance evidence.
-- Compose runtime and clean-clone container execution remain unverified in this environment because the Docker Desktop engine did not respond to the CLI.
+- No adult-ward deterioration model is trained or deployed. The separately packaged PhysioNet ICU sepsis research candidate is inactive and not compatible with NEWS2 or ward observations. Synthetic metrics and simulator outcomes are not clinical-performance evidence.
+- Compose runtime and clean-clone container execution remain unverified in this environment because the Docker Desktop service is stopped and could not be opened by the current Windows account.
 - No production TLS, backup, high-availability, paging, or hospital device integration is configured.
 
 ## Verification

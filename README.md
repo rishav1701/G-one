@@ -118,4 +118,4 @@ The command prints the synthetic scenario events and a reproducibility hash. The
 
 ## Release verification status
 
-Version `v0.1.0` is a local software demonstration release. `docker compose config --quiet`, dependency installation, migrations, seed, simulator scenarios, local API/UI startup, and a clean-clone browser workflow were verified. Docker image builds and Compose runtime were **not verified** because the Docker Desktop engine did not return a server response in the release environment. The exact commands to verify them are the Quick start commands above.
+Version `v0.1.0` is a local software demonstration release. `docker compose config --quiet`, dependency installation, migrations, seed, simulator scenarios, local API/UI startup, and a clean-clone browser workflow were verified. Docker image builds and Compose runtime were **not verified** because the Docker Desktop service is stopped in this environment and could not be opened by the current Windows account. The exact commands to verify them are the Quick start commands above.
