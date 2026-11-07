@@ -23,3 +23,4 @@
 - 2026-11-07: Keep NEWS2 as the only alert-driving score; model alerting remains disabled unless an accepted verified model is deployed.
 - 2026-11-07: Package the demo with Nginx same-origin API proxy and a local-only Compose stack; use generated ignored `.env` secrets and leave the active model directory empty in the shipped container.
 - 2026-11-07: Make admin seeding idempotent without changing existing credentials; simulator reset remains an explicit deterministic reseed operation.
+- 2026-11-07: Use PhysioNet Challenge 2019 v1.0.0 as a separate CC BY 4.0 ICU sepsis hackathon research source; keep its candidate inactive and out of the G One NEWS2/ward model registry because the population and outcome differ from the product task.

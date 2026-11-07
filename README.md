@@ -6,6 +6,8 @@ G One is a simulated adult-ward deterioration demonstration. It supports clinica
 
 NEWS2 must be reviewed by a qualified clinician against the [Royal College of Physicians chart](https://www.rcp.ac.uk/resources/national-early-warning-score-news-2/) and local policy before any clinical use. No trained ML model is deployed; NEWS2 is the only alert-driving score. Simulator outcomes and fixture metrics are not clinical performance evidence.
 
+A separately trained [PhysioNet ICU sepsis research candidate](docs/PHYSIONET_RESEARCH_RUN.md) is included for hackathon demonstration only. It is inactive and does not validate ward deterioration or NEWS2.
+
 ## Quick start — Docker Compose
 
 Use PowerShell from the repository root. Docker Desktop/Engine must be running.

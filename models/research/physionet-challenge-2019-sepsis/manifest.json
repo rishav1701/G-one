@@ -1,0 +1,16 @@
+{
+  "model_id": "physionet-challenge-2019-sepsis-research",
+  "version": "0.1.0",
+  "algorithm": "hist_gradient_boosting",
+  "training_population": "ICU",
+  "outcome": "Challenge SepsisLabel",
+  "horizon_hours": 6,
+  "dataset_version": "PhysioNet Challenge 2019 v1.0.0",
+  "license": "CC BY 4.0",
+  "acceptance_passed": false,
+  "active": false,
+  "model_sha256": "bf29d7c6ef09b0dac350d6d0ca5dfc0b8cf4aeb8f3701ada539d6ffdbdf635b3",
+  "metrics_sha256": "09a6ace1acb12d7f2ca9d7fe0ac53fee32bbf97ae1e5a1bfda2bc9154daa569f",
+  "python_version": "3.11.9",
+  "scikit_learn_version": "1.9.1"
+}

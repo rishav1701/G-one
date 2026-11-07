@@ -1,14 +1,18 @@
 # Future work
 
-G One is a simulated software demonstration, not for clinical use. NEWS2 requires qualified local clinical review before any clinical deployment. The ML candidate in `models/candidate/` was built on generated software fixtures, is explicitly unaccepted, and is not loaded by the application.
+G One is a simulated software demonstration, not for clinical use. NEWS2 requires qualified local clinical review before any clinical deployment. The ward-oriented ML feature contract is still fixture-tested; it has not been trained or validated for ward patients.
+
+## Separate ICU research model
+
+A public-data hackathon candidate from PhysioNet Challenge 2019 is packaged at `models/research/physionet-challenge-2019-sepsis/`. It predicts the challenge-defined sepsis label for ICU records, is uncalibrated, had a 2.75% PPV at the exploratory threshold, and is explicitly unaccepted and inactive. It is not compatible with the ward feature contract and must never be promoted to `models/active` or described as a ward deterioration model. Full patient-level source files remain local and ignored under `.tools/physionet-challenge-2019/`.
 
 ## Model work still required
 
-- Complete `docs/DATA_DECISION_RECORD.md` with the dataset, provenance, cohort, event definition, observation protocol, prediction horizon, and acceptance criteria before any real-data training.
-- Review and comply with the current dataset terms locally. Credentialed patient-level data must not be read by this agent or committed to this repository.
-- Run a locally authorized, leak-checked training and evaluation process on an appropriate cohort. Provide only aggregate metrics and the manifest for review.
-- Assess population mismatch, missingness, label noise, calibration, subgroup performance, prospective validation, local clinical review, and regulatory obligations. Synthetic-scenario results are demonstrations of system behavior and must not be interpreted as clinical performance.
-- Promote only a reviewed artifact whose manifest has `acceptance_passed: true` and whose file hashes and feature contract verify. The model remains secondary to NEWS2; it never replaces the NEWS2 badge or automatically drives clinical actions.
+- Identify a public or institutionally approved ward cohort that matches G One’s population, measurements, and deterioration outcome before training a ward model.
+- Set ward-specific acceptance criteria before viewing held-out test results, then validate patient-level and temporal separation, leakage, calibration, missingness, and subgroup performance.
+- Obtain prospective external validation and qualified local clinical review before making clinical claims or considering operational use.
+- Promote only a reviewed artifact whose manifest has `acceptance_passed: true` and whose hashes and feature contract verify. A model remains secondary to NEWS2 and must never automatically drive clinical actions.
+- Synthetic scenario outcomes remain software-behaviour demonstrations, not clinical performance evidence.
 
 ## Product work still open
 

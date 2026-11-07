@@ -14,6 +14,19 @@ The command runs the shared feature contract and outcome labeller, chronological
 
 The manifest hashes each artifact and sets `acceptance_passed` to `false`. No active model is loaded by the application. Metrics from this synthetic fixture must never be shown as patient model performance.
 
+## Separate public ICU sepsis research run
+
+The fixture runner above remains the only path for the ward-oriented G One feature contract. A separate, standalone script was added for the user-requested PhysioNet Challenge 2019 v1.0.0 public ICU sepsis cohort. It uses its own feature adapter and output location; it does not change the ward pipeline or application runtime. The M0 decision, fixed split/selection criteria, metrics, and limitations are documented in `docs/DATA_DECISION_RECORD.md` and `docs/PHYSIONET_RESEARCH_RUN.md`.
+
+Reproduce the data download, training, and research-only packaging with:
+
+```powershell
+.tools/python311/python.exe scripts/download_physionet2019.py
+.tools/python311/python.exe backend/ml/train_physionet2019.py
+.tools/python311/python.exe scripts/package_physionet_candidate.py
+```
+
+The data download remains in ignored `.tools/physionet-challenge-2019/`. The attributed research model is stored at `models/research/physionet-challenge-2019-sepsis/` with `acceptance_passed: false`; it is outside the application registry. The measured PPV was low and the model is uncalibrated. Do not activate it or use it to support ward or NEWS2 claims.
 ## Runtime and resume
 
 `backend/ml/config.yaml` is the single pipeline configuration. `max_train_hours` bounds the candidate search, and the fixed random seeds make fixture runs repeatable. Candidate estimator checkpoints are written under the ignored `.tools/ml-checkpoints/` directory after each completed search candidate. Rerun the same command after interruption to reuse checkpoints with the matching configuration and fixture signature. If either changes, the pipeline starts a new checkpoint set.

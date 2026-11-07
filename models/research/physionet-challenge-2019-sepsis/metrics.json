@@ -1,0 +1,57 @@
+{
+  "status": "research_candidate_not_clinically_validated",
+  "dataset": "PhysioNet Computing in Cardiology Challenge 2019 v1.0.0",
+  "license": "CC BY 4.0",
+  "training_population": "Adult ICU stays from training sets A and B; patient-grouped random development split",
+  "outcome": "First Challenge SepsisLabel=1 at an hourly landmark; excludes subsequent positive follow-up rows",
+  "prediction_horizon_hours": 6,
+  "sampling": "One landmark every 6 hours plus first positive landmark; features use current and trailing 6 hourly records only",
+  "patient_split": {
+    "train": 28235,
+    "validation": 6050,
+    "test": 6051,
+    "seed": 1729,
+    "positive_patients": {
+      "train": 2052,
+      "validation": 440,
+      "test": 440
+    }
+  },
+  "validation_model_comparison": {
+    "logistic_regression": {
+      "auroc": 0.7476336780503448,
+      "auprc": 0.036332789141973784
+    },
+    "hist_gradient_boosting": {
+      "auroc": 0.8358078803912137,
+      "auprc": 0.09756519883604842
+    }
+  },
+  "selected_model": "hist_gradient_boosting",
+  "test_metrics": {
+    "n_rows": 45747,
+    "n_patients": 6051,
+    "positive_rows": 440,
+    "prevalence": 0.00961811703499683,
+    "auroc": 0.8343841860679766,
+    "auprc": 0.10992011414786429,
+    "brier_score_uncalibrated": 0.19875064540170828,
+    "threshold": 0.49205324147358664,
+    "sensitivity": 0.8136363636363636,
+    "specificity": 0.7207716246937559,
+    "positive_predictive_value": 0.02751940963948036,
+    "tp": 358,
+    "fp": 12651,
+    "tn": 32656,
+    "fn": 82
+  },
+  "threshold_selection": "Validation threshold targeting at least 0.80 sensitivity; exploratory and not clinical",
+  "calibrated": false,
+  "limitations": [
+    "ICU population; not validated for ward deterioration or NEWS2",
+    "Retrospective challenge labels and non-random missingness",
+    "Random patient holdout is not temporal or external validation",
+    "Repeated landmark metrics are row-weighted; confidence intervals not computed",
+    "Research only; do not use for clinical decisions"
+  ]
+}
