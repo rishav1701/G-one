@@ -7,7 +7,7 @@
 | Control | Result | Evidence |
 |---|---|---|
 | No credentials committed | PASS | Grep fallback scanned tracked files for private-key headers, AWS access keys, GitHub tokens, and certificates; no matches. Hardcoded E2E passwords were removed. Browser passwords are supplied through `E2E_PASSWORD`; temporary accounts and passwords are generated per run. |
-| `.env.example` placeholders | DEFERRED to Phase 8 | No `.env.example` exists yet; the packaging phase will add and verify it. No local `.env` file is tracked. |
+| `.env.example` placeholders | PASS | `.env.example` contains placeholders only. `scripts/init-env.ps1` generates random local values into the git-ignored `.env`. No local `.env` is tracked. |
 | CORS restricted to exact frontend origin | PASS | `backend/app/main.py` sets `allow_origins=[settings.frontend_origin]` and does not enable wildcard origins. |
 | Security headers | PASS | Middleware sets CSP with `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a request ID. |
 | Parameterized database access and output encoding | PASS | Database writes and reads use SQLAlchemy expressions or static SQL text. No dynamic SQL interpolation or `dangerouslySetInnerHTML` was found in application code. |
