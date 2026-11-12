@@ -28,6 +28,7 @@ services:
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
       SEED_CLINICIAN_USERNAME: ${SEED_CLINICIAN_USERNAME:-phaseclinician}
       SEED_CLINICIAN_PASSWORD: ${SEED_CLINICIAN_PASSWORD:-}
+      DEMO_LOGIN_ENABLED: ${DEMO_LOGIN_ENABLED:-true}
     depends_on:
       db:
         condition: service_healthy

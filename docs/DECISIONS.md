@@ -28,3 +28,4 @@
 - 2026-11-12: Seed a separate randomly credentialed SENIOR_CLINICIAN for judge-facing manual entry while keeping ADMIN free of clinical permissions; seed simulator wards before demo users so their assignments stay in scope.
 - 2026-11-12: Retain the two simulator ward records during data reseeds so existing ward assignments and manual demo accounts remain valid as new scenarios are generated.
 - 2026-11-12: Keep the existing PhysioNet ICU sepsis candidate inactive and do not train a claimed ward model from simulator data, because the user has no ward dataset and the public candidate's cohort and outcome do not match G One.
+- 2026-11-12: Provide one-click SENIOR_CLINICIAN demo sign-in only in development on localhost; it creates a normal server-side session and never exposes the generated password, while production disables the route.

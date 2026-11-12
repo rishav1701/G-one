@@ -32,6 +32,13 @@
 - No Playwright screenshots, route walkthrough, or axe scan were generated for this patch. The browser binary is present, but the app's local database/API was not reachable. Manual checks are listed in `docs/UI_REVIEW.md`.
 - Docker image build and Compose startup remain UNVERIFIED, as in the Phase 8 report.
 
+## Login convenience addendum
+
+- Added a prominent **Demo access for judges** panel and a **Continue as demo clinician** button. The button is rendered only when the API reports that demo sign-in is enabled for a localhost development request.
+- The button uses a CSRF-protected endpoint to create the normal hashed server-side session and audit event for the seeded SENIOR_CLINICIAN. It does not send the account password to the browser. The endpoint is disabled outside development and rejects non-local hosts; Compose binds to loopback by default.
+- `tests/test_security_spine.py` now allowlists and checks the opt-in, localhost-only, CSRF-protected route. These focused tests passed (3 passed, 1 deselected). Frontend tests (19), type-check, build, and raw style scan passed; Compose syntax passed.
+- The PostgreSQL-backed session creation and browser screenshot/axe gates remain UNVERIFIED because this environment cannot reach the local database/API. Rebuild and hard-refresh the local demo with `scripts/demo.ps1` to see the updated screen.
+
 ## Decisions made
 
 - Keep ADMIN unassigned to wards and without clinical actions; add a separate SENIOR_CLINICIAN account so judges can enter observations without weakening RBAC.

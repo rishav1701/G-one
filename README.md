@@ -23,13 +23,15 @@ Open [http://localhost:8080](http://localhost:8080) and sign in. The health chec
 
 ### Judge run-through
 
-1. Sign in as `phaseclinician` with the one-time password printed by `scripts/demo.ps1`. This account can enter observations and use clinical alert actions. The `phaseadmin` account is for administration and cannot take clinical actions.
+1. On the local Compose demo, click **Continue as demo clinician**. This signs in as `phaseclinician` for patient records, manual observations, and clinical alert actions. If using a deployment without the local-only button, sign in with the one-time password printed by `scripts/demo.ps1`. The `phaseadmin` account is for administration and cannot take clinical actions.
 2. Open the dashboard worklist, then select `SIM-000003` to inspect a simulated gradual-deterioration case and its NEWS2 explanation.
 3. On the patient page, use **Enter observation** to submit a manual set of observed values. The returned NEWS2 assessment appears on the page. The values remain demonstration input and do not change the model state.
 4. Open **Alerts** to review the explanation and history, record a response, and resolve through the confirmation flow.
 5. Use the patient directory to inspect `SIM-000007` (missing observations), `SIM-000009` (sensor disconnection), and `SIM-000011` (data-quality scenario). These are fixed simulated cases, not real patients.
 
 The two demo passwords are generated only when the accounts are first created and printed once. Re-running the seed preserves existing passwords. If a password is lost, use a fresh local database volume for a clean demo setup; do not add a shared password to the repository.
+
+On the loopback-only Docker Compose demo, the login page also offers **Continue as demo clinician**. It creates a normal server-side session for `phaseclinician` without displaying or autofilling its password. The endpoint is enabled only in development and only for localhost requests; it is unavailable when `ENVIRONMENT=production`.
 
 Other demo commands:
 
