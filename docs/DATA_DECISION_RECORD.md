@@ -12,3 +12,9 @@
 - Data handling: Full downloaded patient-level files remain under ignored `.tools/physionet-challenge-2019` and are not committed. The aggregate metrics and attributed, inactive research model are packaged separately in `models/research/physionet-challenge-2019-sepsis`; the model is not in `models/active`.
 - Verified split counts: train 28,235 patients (2,052 positive), validation 6,050 (440 positive), test 6,051 (440 positive); zero overlap. The predeclared 100-positive-per-split minimum passed.
 - Attribution: Reyna et al., “Early Prediction of Sepsis from Clinical Data: The PhysioNet/Computing in Cardiology Challenge 2019,” v1.0.0, PhysioNet, doi:10.13026/v64v-d857.
+
+## G One ward-model decision
+
+- Status: pending; the user reports having no database or other data resource for a ward-specific model.
+- The PhysioNet candidate above is an ICU sepsis research model only. It is not a valid substitute for a model trained on adult general-ward deterioration and remains inactive.
+- Do not train on the deterministic simulator or describe synthetic scenario outcomes as model performance. Wait for a suitable, approved ward dataset and a complete ward-specific M0 decision before training.

@@ -25,3 +25,6 @@
 - 2026-11-07: Make admin seeding idempotent without changing existing credentials; simulator reset remains an explicit deterministic reseed operation.
 - 2026-11-07: Use PhysioNet Challenge 2019 v1.0.0 as a separate CC BY 4.0 ICU sepsis hackathon research source; keep its candidate inactive and out of the G One NEWS2/ward model registry because the population and outcome differ from the product task.
 - 2026-11-07: Bind the local Compose demo to loopback by default so startup does not expose the simulated application to the host network; users must deliberately configure a separately secured reverse proxy for remote access.
+- 2026-11-12: Seed a separate randomly credentialed SENIOR_CLINICIAN for judge-facing manual entry while keeping ADMIN free of clinical permissions; seed simulator wards before demo users so their assignments stay in scope.
+- 2026-11-12: Retain the two simulator ward records during data reseeds so existing ward assignments and manual demo accounts remain valid as new scenarios are generated.
+- 2026-11-12: Keep the existing PhysioNet ICU sepsis candidate inactive and do not train a claimed ward model from simulator data, because the user has no ward dataset and the public candidate's cohort and outcome do not match G One.

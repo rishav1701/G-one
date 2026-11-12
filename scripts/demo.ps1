@@ -14,9 +14,9 @@ try {
         } catch { Start-Sleep -Seconds 2 }
     }
     if (-not $ready) { throw 'The G One web service did not become healthy within 120 seconds.' }
-    docker compose exec -T backend python -m app.seed
-    if ($LASTEXITCODE -ne 0) { throw 'Admin seed failed.' }
     docker compose exec -T backend python -m simulator.cli reset-seed --seed $Seed
     if ($LASTEXITCODE -ne 0) { throw 'Simulator seed failed.' }
-    Write-Output 'Demo is ready at http://localhost:8080. The first seed prints the admin password once.'
+    docker compose exec -T backend python -m app.seed
+    if ($LASTEXITCODE -ne 0) { throw 'Demo user seed failed.' }
+    Write-Output 'Demo is ready at http://localhost:8080. First-run passwords are printed once above.'
 } finally { Pop-Location }

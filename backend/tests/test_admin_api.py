@@ -8,6 +8,8 @@ from app.core.db import SessionLocal
 from app.domain.clock import SystemClock
 from app.main import app
 from app.models.base import AppUser, Role, Session, Ward, UserWard
+from app.seed import seed_users
+from simulator.engine import reset_simulation, run_seed
 
 
 @pytest.fixture
@@ -79,3 +81,60 @@ def test_admin_can_reset_deterministic_simulator(admin_client):
     assert advance.status_code == 200
     refreshed = client.get(f"/api/v1/admissions/{missing['id']}/assessments?limit=1").json()
     assert refreshed[0]["level"] == "STALE"
+
+
+def test_demo_seed_creates_separate_clinical_login_and_preserves_passwords():
+    db = SessionLocal()
+    suffix = uuid.uuid4().hex[:10]
+    admin_name = f"seed-admin-{suffix}"
+    clinician_name = f"seed-clinician-{suffix}"
+    try:
+        run_seed(db, int(suffix[:6], 16))
+        first_messages = seed_users(
+            db,
+            admin_username=admin_name,
+            admin_password="admin-test-password-1",
+            clinician_username=clinician_name,
+            clinician_password="clinician-test-password-1",
+        )
+        admin = db.query(AppUser).filter_by(username=admin_name).one()
+        clinician = db.query(AppUser).filter_by(username=clinician_name).one()
+        assert admin.role is Role.ADMIN
+        assert not db.query(UserWard).filter_by(user_id=admin.id).first()
+        assert clinician.role is Role.SENIOR_CLINICIAN
+        assert {row.ward_id for row in db.query(UserWard).filter_by(user_id=clinician.id)} == {
+            row.id for row in db.query(Ward).filter(Ward.name.like("Simulation Ward %"))
+        }
+        assert any("one-time password for ADMIN" in item for item in first_messages)
+        assert any("one-time password for SENIOR_CLINICIAN" in item for item in first_messages)
+
+        assigned_wards = {
+            row.ward_id for row in db.query(UserWard).filter_by(user_id=clinician.id)
+        }
+        run_seed(db, int(suffix[:6], 16) + 1)
+        assert {
+            row.ward_id for row in db.query(UserWard).filter_by(user_id=clinician.id)
+        } == assigned_wards
+
+        admin_hash = admin.password_hash
+        clinician_hash = clinician.password_hash
+        second_messages = seed_users(
+            db,
+            admin_username=admin_name,
+            admin_password="changed-admin-password-2",
+            clinician_username=clinician_name,
+            clinician_password="changed-clinician-password-2",
+        )
+        assert admin.password_hash == admin_hash
+        assert clinician.password_hash == clinician_hash
+        assert all("changed-" not in item for item in second_messages)
+    finally:
+        for username in (admin_name, clinician_name):
+            user = db.query(AppUser).filter_by(username=username).one_or_none()
+            if user is not None:
+                db.query(UserWard).filter_by(user_id=user.id).delete(synchronize_session=False)
+                db.delete(user)
+        db.commit()
+        reset_simulation(db)
+        app.state.clock = SystemClock()
+        db.close()

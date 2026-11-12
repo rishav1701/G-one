@@ -81,3 +81,9 @@ All new administration and alert routes were reviewed at 1440×900, 1024×768, a
 The workflow verified user creation and ward assignment, simulated-clock reset and advance, escalation after the configured simulated delay, acknowledge, response recording, and resolution. ADMIN has no clinical action controls; VIEWER has no action controls and cannot access Administration; the backend RBAC tests reject unauthorized operations. Screenshots were visually checked at desktop, tablet, and mobile sizes. The alert table scrolls within its labelled, keyboard-accessible region on narrow screens.
 
 Raw style values and contrast were rerun: both passed. Contrast pairs: body 17.06:1, secondary 7.24:1, primary 6.44:1, banner 17.85:1, LOW 6.81:1, LOW_MEDIUM 6.62:1, MEDIUM 6.88:1, HIGH 5.91:1.
+
+# UI Review — Post-release demo usability follow-up
+
+Status: **UNVERIFIED**. The login page now explains which seeded account can enter observations, and the Analytics no-model state distinguishes the inactive ICU candidate from a deployed ward model. A Vitest copy check passes. A fresh screenshot review and Playwright/axe run could not be completed because the local PostgreSQL/API service was unavailable to this session.
+
+On a working demo host, capture and inspect every route at 1440×900, 1024×768, and 390×844 under `docs/screens/post-release-demo/`. Check the full Phase UI checklist at each required route: 4-pixel grid, type scale, badge use, tabular/right-aligned clinical numbers, no page-level horizontal scroll, no clipped text, six states, visible focus, contrast, simulation banner, banned patterns, chart rules, and copy rules. Specifically verify that the login help is readable at all three sizes, the Analytics research-model note does not imply ward applicability, and the seeded SENIOR_CLINICIAN can save a manual observation while ADMIN remains unable to do so.

@@ -26,6 +26,8 @@ services:
       GONE_ROOT: /app
       SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-phaseadmin}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_CLINICIAN_USERNAME: ${SEED_CLINICIAN_USERNAME:-phaseclinician}
+      SEED_CLINICIAN_PASSWORD: ${SEED_CLINICIAN_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy

@@ -44,3 +44,32 @@ M0: dataset/version; credentialing and data-use status; population; inclusion/ex
 ## Environment and conflicts
 
 See `docs/ENVIRONMENT.md`. Phase gates requiring PostgreSQL, Python, Playwright/Chromium, network or gitleaks are not currently verifiable. Docker is installed; daemon and compose workload remain unverified. Use explicit UNVERIFIED labels and prescribed fallbacks. No conflict changes the architecture; Phase 1 may proceed only with honest gate reporting and cannot claim PostgreSQL/browser checks.
+
+## Post-release hackathon usability follow-up
+
+### Findings and scope
+
+- The released seed creates only an ADMIN login, while the authorization rules correctly block admins from clinical entry. Create a separate random-password SENIOR_CLINICIAN demo login with access to the simulator wards, and print its credentials only when it is first created.
+- The login screen and quick start do not tell a judge which account supports clinical actions. Add terse login guidance and a judge run-through to the README.
+- Keep the trained PhysioNet 2019 ICU sepsis candidate inactive and accurately labelled. It is not a ward deterioration model, and its metrics must not be presented as G One ward performance.
+- Retain the six deterministic simulated scenarios as starter records; manual observations remain possible on those synthetic patients.
+
+### Work order and estimates
+
+1. Update this plan with the post-release scope before product changes (0.1 h).
+2. Make seeding idempotently create an unassigned ADMIN and a ward-scoped SENIOR_CLINICIAN with separate generated credentials; run simulator reseed before user seed so ward assignments are current (0.5 h).
+3. Add explicit login guidance and update the self-serve demo and manual-entry walkthrough in README (0.4 h).
+4. Add a focused PostgreSQL-backed seed/RBAC regression check and run backend/frontend checks (0.5 h).
+5. Capture and inspect login and route screenshots at required sizes if a browser/database service is available; record any UI-gate limitation otherwise (0.5 h).
+6. Update state, decision record, and a post-release report, then commit the reviewable patch (0.2 h).
+
+### Risks and limits
+
+- Do not assign ADMIN clinical permissions or ship a shared/default demo password.
+- Do not activate or show the ICU candidate as a ward model. A genuine ward model requires the user's approved ward dataset decision, target definition, prediction horizon, sampling policy, and acceptance criteria before results are inspected.
+- The Docker daemon did not respond during release verification; any container/browser recheck may remain UNVERIFIED.
+
+### Exact user inputs still needed
+
+- User reports having no database or other training-data resource. This blocks training a fit-for-purpose adult ward model. If one becomes available later, record its version and approved data-use status, source/`ML_DATA_DIR`, adult ward population and inclusion/exclusion, outcome event and timestamp source, horizon, observation window/cadence, prediction times, minimum features, and pre-result acceptance criteria. Never upload patient-level data.
+- No further input is required for the demo login/manual-entry fix.

@@ -4,9 +4,9 @@ G One is a simulated adult-ward deterioration demonstration. It supports clinica
 
 > **SIMULATED DATA. DEMONSTRATION ONLY. NOT FOR CLINICAL USE.**
 
-NEWS2 must be reviewed by a qualified clinician against the [Royal College of Physicians chart](https://www.rcp.ac.uk/resources/national-early-warning-score-news-2/) and local policy before any clinical use. No trained ML model is deployed; NEWS2 is the only alert-driving score. Simulator outcomes and fixture metrics are not clinical performance evidence.
+NEWS2 must be reviewed by a qualified clinician against the [Royal College of Physicians chart](https://www.rcp.ac.uk/resources/national-early-warning-score-news-2/) and local policy before any clinical use. No ward deterioration model is deployed; NEWS2 is the only alert-driving score. Simulator outcomes and fixture metrics are not clinical performance evidence.
 
-A separately trained [PhysioNet ICU sepsis research candidate](docs/PHYSIONET_RESEARCH_RUN.md) is included for hackathon demonstration only. It is inactive and does not validate ward deterioration or NEWS2.
+A separately trained [PhysioNet ICU sepsis research candidate](docs/PHYSIONET_RESEARCH_RUN.md) is included for hackathon demonstration only. Its [model card and aggregate metrics](models/research/physionet-challenge-2019-sepsis/model_card.md) show a real held-out ICU sepsis experiment; it is inactive and must not be shown as a G One ward estimate. G One has no trained adult-ward model because no suitable ward dataset is available. The six patient scenarios are deterministic software fixtures, not ML training data.
 
 ## Quick start — Docker Compose
 
@@ -17,9 +17,19 @@ Use PowerShell from the repository root. Docker Desktop/Engine must be running.
 .\scripts\demo.ps1
 ```
 
-The setup script creates a git-ignored `.env` with random local database and application secrets. The demo script builds and starts PostgreSQL, applies migrations, creates the administrator if needed, and resets the simulator with seed 42. On first use, it prints the generated one-time admin password. The default username is `phaseadmin`; the generated password is not saved in the repository.
+The setup script creates a git-ignored `.env` with random local database and application secrets. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates two separate accounts if needed. On first use it prints each new account's one-time password. The default usernames are `phaseadmin` (administration and simulator controls) and `phaseclinician` (patient records, manual observations, and clinical actions). Passwords are not saved in the repository.
 
 Open [http://localhost:8080](http://localhost:8080) and sign in. The health check is [http://localhost:8080/health](http://localhost:8080/health).
+
+### Judge run-through
+
+1. Sign in as `phaseclinician` with the one-time password printed by `scripts/demo.ps1`. This account can enter observations and use clinical alert actions. The `phaseadmin` account is for administration and cannot take clinical actions.
+2. Open the dashboard worklist, then select `SIM-000003` to inspect a simulated gradual-deterioration case and its NEWS2 explanation.
+3. On the patient page, use **Enter observation** to submit a manual set of observed values. The returned NEWS2 assessment appears on the page. The values remain demonstration input and do not change the model state.
+4. Open **Alerts** to review the explanation and history, record a response, and resolve through the confirmation flow.
+5. Use the patient directory to inspect `SIM-000007` (missing observations), `SIM-000009` (sensor disconnection), and `SIM-000011` (data-quality scenario). These are fixed simulated cases, not real patients.
+
+The two demo passwords are generated only when the accounts are first created and printed once. Re-running the seed preserves existing passwords. If a password is lost, use a fresh local database volume for a clean demo setup; do not add a shared password to the repository.
 
 Other demo commands:
 
@@ -30,7 +40,7 @@ Other demo commands:
 docker compose down
 ```
 
-`up.ps1` starts the services without reseeding. `seed.ps1` creates the administrator if absent and resets the simulator. `reset.ps1` replaces only the synthetic simulator data, preserving the administrator. `docker compose down` stops containers and preserves the local PostgreSQL volume. The Compose file can be syntax-checked without starting Docker:
+`up.ps1` starts the services without reseeding. `seed.ps1` resets the simulator and creates the two demo accounts if absent. `reset.ps1` replaces only the synthetic simulator data, preserving users. `docker compose down` stops containers and preserves the local PostgreSQL volume. The Compose file can be syntax-checked without starting Docker:
 
 ```powershell
 docker compose config --quiet
@@ -48,12 +58,12 @@ python -m pip install ".[ml,test]"
 $env:DATABASE_URL = 'postgresql+psycopg://gone:gone@127.0.0.1:5432/gone'
 $env:ENVIRONMENT = 'development'
 python -m alembic upgrade head
-python -m app.seed
 python -m simulator.cli reset-seed --seed 42
+python -m app.seed
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-`app.seed` prints the one-time administrator password. If that administrator already exists, the seed command leaves its password unchanged.
+`app.seed` creates an ADMIN and a separate SENIOR_CLINICIAN assigned to the simulator wards. It prints each password only when its account is first created. Existing passwords are never changed by reseeding. The simulator should be seeded before the users so the clinical account receives the current ward assignments.
 
 Frontend terminal:
 

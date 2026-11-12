@@ -60,12 +60,9 @@ def _clear_existing(db: Session, seed: int | None = None):
         db.query(IngestionRejection).filter(IngestionRejection.admission_id.in_(admission_ids)).delete(synchronize_session=False)
         db.query(LabResult).filter(LabResult.admission_id.in_(admission_ids)).delete(synchronize_session=False)
         patient_ids = list(db.scalars(select(Admission.patient_id).where(Admission.id.in_(admission_ids))).all())
-        ward_ids = list(db.scalars(select(Admission.ward_id).where(Admission.id.in_(admission_ids)).distinct()).all())
         db.query(Admission).filter(Admission.id.in_(admission_ids)).delete(synchronize_session=False)
         if patient_ids:
             db.query(Patient).filter(Patient.id.in_(patient_ids)).delete(synchronize_session=False)
-        if ward_ids:
-            db.query(Ward).filter(Ward.id.in_(ward_ids), Ward.name.like("Simulation Ward %")).delete(synchronize_session=False)
     db.query(DataSourceStatus).filter(DataSourceStatus.source.like("sim-%")).delete(synchronize_session=False)
     key_pointer = db.get(SystemConfig, "simulator_machine_key_id")
     if key_pointer:
@@ -84,8 +81,18 @@ def _clear_existing(db: Session, seed: int | None = None):
 
 
 def _seed_rows(db: Session, seed: int, clock: SimulatedClock):
-    wards = [Ward(id=_id(seed, f"ward-{i}"), name=f"Simulation Ward {i}") for i in (1, 2)]
-    db.add_all(wards)
+    ward_names = [f"Simulation Ward {i}" for i in (1, 2)]
+    existing_wards = {
+        ward.name: ward
+        for ward in db.scalars(select(Ward).where(Ward.name.in_(ward_names))).all()
+    }
+    wards = []
+    for i, name in enumerate(ward_names, start=1):
+        ward = existing_wards.get(name)
+        if ward is None:
+            ward = Ward(id=_id(seed, f"ward-{i}"), name=name)
+            db.add(ward)
+        wards.append(ward)
     db.flush()
     admissions: dict[str, list[Admission]] = {scenario: [] for scenario in SCENARIOS}
     patients_by_scenario: dict[str, list[Patient]] = {scenario: [] for scenario in SCENARIOS}
