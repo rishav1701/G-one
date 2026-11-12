@@ -1,7 +1,7 @@
 param([int]$Seed = 42)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not (Test-Path -LiteralPath (Join-Path $repo '.env'))) { & (Join-Path $PSScriptRoot 'init-env.ps1') }
+& (Join-Path $PSScriptRoot 'init-env.ps1')
 Push-Location $repo
 try {
     docker compose up -d --build
@@ -18,5 +18,5 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Simulator seed failed.' }
     docker compose exec -T backend python -m app.seed
     if ($LASTEXITCODE -ne 0) { throw 'Demo user seed failed.' }
-    Write-Output 'Demo is ready at http://localhost:8080. First-run passwords are printed once above.'
+    Write-Output 'Demo is ready at http://localhost:8080. Quick demo access can load the local demo accounts into the login form.'
 } finally { Pop-Location }

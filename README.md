@@ -17,21 +17,21 @@ Use PowerShell from the repository root. Docker Desktop/Engine must be running.
 .\scripts\demo.ps1
 ```
 
-The setup script creates a git-ignored `.env` with random local database and application secrets. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates two separate accounts if needed. On first use it prints each new account's one-time password. The default usernames are `phaseadmin` (administration and simulator controls) and `phaseclinician` (patient records, manual observations, and clinical actions). Passwords are not saved in the repository.
+The setup script creates or updates a git-ignored `.env` with random local database, application, and demo account passwords. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates the two demo accounts. It synchronizes these local demo account passwords from `.env` so the login tiles can populate the credential fields. The default usernames are `phaseadmin` (administration and simulator controls) and `phaseclinician` (patient records, manual observations, and clinical actions). No secret is committed.
 
 Open [http://localhost:8080](http://localhost:8080) and sign in. The health check is [http://localhost:8080/health](http://localhost:8080/health).
 
 ### Judge run-through
 
-1. On the local Compose demo, click **Continue as demo clinician**. This signs in as `phaseclinician` for patient records, manual observations, and clinical alert actions. If using a deployment without the local-only button, sign in with the one-time password printed by `scripts/demo.ps1`. The `phaseadmin` account is for administration and cannot take clinical actions.
+1. On the local Compose demo, click **Demo clinician** or **Administrator** under Quick demo access. The matching username and password are fetched into the masked sign-in fields; select **Sign in** to continue. The clinician account supports patient records, manual observations, and clinical alert actions. The administrator account supports administration and cannot take clinical actions.
 2. Open the dashboard worklist, then select `SIM-000003` to inspect a simulated gradual-deterioration case and its NEWS2 explanation.
 3. On the patient page, use **Enter observation** to submit a manual set of observed values. The returned NEWS2 assessment appears on the page. The values remain demonstration input and do not change the model state.
 4. Open **Alerts** to review the explanation and history, record a response, and resolve through the confirmation flow.
 5. Use the patient directory to inspect `SIM-000007` (missing observations), `SIM-000009` (sensor disconnection), and `SIM-000011` (data-quality scenario). These are fixed simulated cases, not real patients.
 
-The two demo passwords are generated only when the accounts are first created and printed once. Re-running the seed preserves existing passwords. If a password is lost, use a fresh local database volume for a clean demo setup; do not add a shared password to the repository.
+The setup script generates local demo passwords into the git-ignored `.env`. Running `scripts/demo.ps1` or `scripts/seed.ps1` synchronizes the local demo account hashes from those values, so an existing local demo database recovers the same credentials. These commands revoke existing sessions for the two demo accounts. The normal seed function preserves account passwords unless this explicit local-demo sync is enabled.
 
-On the loopback-only Docker Compose demo, both quick-access account tiles are clickable. They create a normal server-side session for the selected seeded clinician or administrator without displaying or autofilling either password. This shortcut is enabled only in development for localhost requests; it is unavailable when `ENVIRONMENT=production`. When the shortcut is disabled, a tile fills the username and you enter the one-time password printed at account creation.
+On the loopback-only Docker Compose demo, both quick-access tiles fetch their account's username and password into the sign-in form. Credential retrieval is available only in development for localhost requests, requires CSRF, is rate-limited, and is not cached. Outside that local demo, tiles fill the username only; passwords are never returned by the credential endpoint in production.
 
 Other demo commands:
 

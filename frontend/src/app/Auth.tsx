@@ -2,7 +2,8 @@ import {createContext,useContext,useEffect,useState,type ReactNode} from 'react'
 import {api,setCsrfToken} from '../lib/api';
 
 type User={id:string;username:string;role:string};
-type Auth={user:User|null;loading:boolean;login:(username:string,password:string)=>Promise<void>;demoLogin:(account:'clinician'|'admin')=>Promise<void>;logout:()=>Promise<void>};
+type DemoCredentials={username:string;password:string};
+type Auth={user:User|null;loading:boolean;login:(username:string,password:string)=>Promise<void>;demoCredentials:(account:'clinician'|'admin')=>Promise<DemoCredentials>;logout:()=>Promise<void>};
 const Ctx=createContext<Auth|null>(null);
 
 export function AuthProvider({children}:{children:ReactNode}){
@@ -17,15 +18,14 @@ export function AuthProvider({children}:{children:ReactNode}){
   const d=await api<User&{csrf_token:string}>('/auth/login',{method:'POST',body:JSON.stringify({username,password})});
   setCsrfToken(d.csrf_token);setUser(d);
  }
- async function demoLogin(account:'clinician'|'admin'){
+ async function demoCredentials(account:'clinician'|'admin'){
   const challenge=await api<{csrf_token:string}>('/auth/csrf');
   setCsrfToken(challenge.csrf_token);
-  const d=await api<User&{csrf_token:string}>('/auth/demo-login',{method:'POST',body:JSON.stringify({account})});
-  setCsrfToken(d.csrf_token);setUser(d);
+  return api<DemoCredentials>('/auth/demo-credentials',{method:'POST',body:JSON.stringify({account})});
  }
  async function logout(){
   await api('/auth/logout',{method:'POST'});setUser(null);setCsrfToken('');
  }
- return <Ctx.Provider value={{user,loading,login,demoLogin,logout}}>{children}</Ctx.Provider>;
+ return <Ctx.Provider value={{user,loading,login,demoCredentials,logout}}>{children}</Ctx.Provider>;
 }
 export function useAuth(){const c=useContext(Ctx);if(!c)throw new Error('AuthProvider missing');return c;}

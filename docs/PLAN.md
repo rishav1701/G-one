@@ -53,6 +53,7 @@ See `docs/ENVIRONMENT.md`. Phase gates requiring PostgreSQL, Python, Playwright/
 - The login screen and quick start do not tell a judge which account supports clinical actions. Add terse login guidance and a judge run-through to the README.
 - The user requested in-page one-click sign-in. Provide it only as a development localhost flow that issues a normal server-side session and never exposes the generated password.
 - Follow-up: make the clinician and administrator quick-access tiles clickable. Keep the password hashes and one-time passwords private; the development localhost flow may issue a normal audited session for either seeded account. When that flow is disabled, selecting a tile fills the username only.
+- Latest user direction: clicking a local-demo tile should fill both fields. Generate account passwords into the ignored `.env`; synchronize the two demo hashes only when explicit local demo seed scripts run; provide a CSRF-protected, rate-limited, no-cache credentials endpoint that rejects non-local or production requests. Do not expose this flow on hosted deployments.
 - Keep the trained PhysioNet 2019 ICU sepsis candidate inactive and accurately labelled. It is not a ward deterioration model, and its metrics must not be presented as G One ward performance.
 - Retain the six deterministic simulated scenarios as starter records; manual observations remain possible on those synthetic patients.
 

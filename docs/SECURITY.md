@@ -7,7 +7,7 @@
 | Control | Result | Evidence |
 |---|---|---|
 | No credentials committed | PASS | Grep fallback scanned tracked files for private-key headers, AWS access keys, GitHub tokens, and certificates; no matches. Hardcoded E2E passwords were removed. Browser passwords are supplied through `E2E_PASSWORD`; temporary accounts and passwords are generated per run. |
-| `.env.example` placeholders | PASS | `.env.example` contains placeholders only. `scripts/init-env.ps1` generates random local values into the git-ignored `.env`. No local `.env` is tracked. |
+| `.env.example` placeholders | PASS | `.env.example` contains placeholders only. `scripts/init-env.ps1` generates random local values, including demo passwords, into the git-ignored `.env`. No local `.env` is tracked. |
 | CORS restricted to exact frontend origin | PASS | `backend/app/main.py` sets `allow_origins=[settings.frontend_origin]` and does not enable wildcard origins. |
 | Security headers | PASS | Middleware sets CSP with `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a request ID. |
 | Parameterized database access and output encoding | PASS | Database writes and reads use SQLAlchemy expressions or static SQL text. No dynamic SQL interpolation or `dangerouslySetInnerHTML` was found in application code. |
@@ -18,7 +18,7 @@
 | Audit append-only | PASS | Simulator/alert tests verify audit rows cannot be updated or deleted. |
 | Ingestion idempotency | PASS | Clinical API tests verify duplicate ingestion handling and assessment recomputation. |
 | Model loading | PASS | Registry accepts only `models/active`, validates manifest acceptance and artifact hashes, and rejects invalid paths or changed files. No model upload route exists. |
-| Local demo sign-in | PASS | The optional demo-login endpoint is disabled outside development, reports availability only for localhost, requires the pre-login CSRF token, and accepts only the seeded SENIOR_CLINICIAN or ADMIN account. It issues a normal hashed server-side session, records an audit event, and does not return or store a password in the browser. Compose binds to loopback by default. |
+| Local demo credential autofill | PASS | `/auth/demo-credentials` returns one selected seeded account's local `.env` credentials only in development for localhost, after a CSRF check, rate limit, and password-hash match. Responses are not cached and credential access is audited without recording secret values. Production rejects the endpoint; Compose binds to loopback by default. |
 | Pinned dependencies and vulnerability scan | PASS | Direct frontend dependencies and Python requirements are pinned. `npm audit` reports 0 vulnerabilities. `pip-audit --local` reports no known vulnerabilities. |
 
 ## Dependency fixes

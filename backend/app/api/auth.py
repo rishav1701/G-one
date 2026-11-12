@@ -18,7 +18,9 @@ _attempts=defaultdict(deque)
 def digest(v:str)->str: return hashlib.sha256(v.encode()).hexdigest()
 def utcnow(): return datetime.now(timezone.utc)
 class LoginIn(BaseModel): model_config=ConfigDict(extra="forbid"); username:str=Field(min_length=1,max_length=120); password:str=Field(min_length=1,max_length=256)
-class DemoLoginIn(BaseModel): model_config=ConfigDict(extra="forbid"); account:Literal["clinician","admin"]="clinician"
+class DemoAccountIn(BaseModel): model_config=ConfigDict(extra="forbid"); account:Literal["clinician","admin"]="clinician"
+class DemoStatusOut(BaseModel): enabled:bool; clinician_username:str; admin_username:str
+class DemoCredentialsOut(BaseModel): username:str; password:str
 class PasswordIn(BaseModel): model_config=ConfigDict(extra="forbid"); current_password:str; new_password:str=Field(min_length=12,max_length=256)
 def current_session(request:Request, db:DBSession=Depends(get_db)):
     raw=request.cookies.get("g_one_session")
@@ -79,7 +81,7 @@ def _local_demo_request(request: Request) -> bool:
         and request.url.hostname in {"localhost", "127.0.0.1", "::1"}
     )
 
-@router.get("/demo-status")
+@router.get("/demo-status",response_model=DemoStatusOut)
 def demo_status(request: Request):
     return {
         "enabled": _local_demo_request(request),
@@ -87,13 +89,8 @@ def demo_status(request: Request):
         "admin_username": os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin"),
     }
 
-def _demo_account(data: DemoLoginIn):
-    if data.account == "admin":
-        return Role.ADMIN, os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin")
-    return Role.SENIOR_CLINICIAN, os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician")
-
-@router.post("/demo-login")
-def demo_login(data:DemoLoginIn,request:Request,response:Response,db:DBSession=Depends(get_db)):
+@router.post("/demo-credentials",response_model=DemoCredentialsOut)
+def demo_credentials(data:DemoAccountIn,request:Request,response:Response,db:DBSession=Depends(get_db)):
     if not _local_demo_request(request):
         raise HTTPException(404,"Not found")
     pre_cookie=request.cookies.get("g_one_pre_csrf",""); pre_header=request.headers.get("X-CSRF-Token","")
@@ -104,19 +101,28 @@ def demo_login(data:DemoLoginIn,request:Request,response:Response,db:DBSession=D
     if len(attempts)>=20: raise HTTPException(429,"Too many attempts. Try again later")
     attempts.append(now_m)
     role,username=_demo_account(data)
+    password_env="SEED_ADMIN_PASSWORD" if data.account=="admin" else "SEED_CLINICIAN_PASSWORD"
+    password=os.environ.get(password_env,"")
     user=db.query(AppUser).filter_by(username=username,role=role,active=True).first()
-    if user is None:
-        raise HTTPException(503,"Demo account is not ready. Run the demo seed command first.")
-    now=utcnow(); raw=secrets.token_urlsafe(32); csrf=secrets.token_urlsafe(32)
-    session=Session(token_hash=digest(raw),csrf_hash=digest(csrf),user_id=user.id,created_at=now,last_seen_at=now,expires_at=now+timedelta(hours=settings.session_absolute_hours))
-    db.add(session); db.flush()
-    db.add(AuditLog(actor_id=user.id,action="auth.demo_login",object_type="session",object_id=session.id,request_id=getattr(request.state,"request_id","unknown")))
+    if not password or user is None:
+        raise HTTPException(503,"Local demo credentials are not ready. Run scripts/demo.ps1 first.")
+    try:
+        password_matches=hasher.verify(user.password_hash,password)
+    except (VerifyMismatchError,InvalidHashError):
+        password_matches=False
+    if not password_matches:
+        raise HTTPException(503,"Local demo credentials need synchronization. Run scripts/demo.ps1 again.")
+    db.add(AuditLog(actor_id=None,action="auth.demo_credentials_fetch",object_type="app_user",object_id=user.id,request_id=getattr(request.state,"request_id","unknown")))
     db.commit()
-    secure=settings.environment!="development" or settings.cookie_secure
-    response.set_cookie("g_one_session",raw,httponly=True,secure=secure,samesite="lax",max_age=settings.session_absolute_hours*3600,path="/")
-    response.set_cookie("g_one_csrf",csrf,httponly=False,secure=secure,samesite="lax",max_age=settings.session_absolute_hours*3600,path="/")
-    response.delete_cookie("g_one_pre_csrf",path="/")
-    return {"id":user.id,"username":user.username,"role":user.role.value,"csrf_token":csrf}
+    response.headers["Cache-Control"]="no-store, no-cache, must-revalidate"
+    response.headers["Pragma"]="no-cache"
+    return {"username":username,"password":password}
+
+def _demo_account(data: DemoAccountIn):
+    if data.account == "admin":
+        return Role.ADMIN, os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin")
+    return Role.SENIOR_CLINICIAN, os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician")
+
 @router.get("/me")
 def me(request:Request,user:AppUser=Depends(current_session)):
     return {"id":user.id,"username":user.username,"role":user.role.value,"csrf_token":request.cookies.get("g_one_csrf","")}

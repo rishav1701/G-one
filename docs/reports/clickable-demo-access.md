@@ -1,31 +1,20 @@
 # Clickable demo access report — 2026-11-13
 
-## Delivered
+This report captures the prior clickable-session implementation before the follow-up that loads credentials into the login form. The latest behavior and checks are recorded in `docs/reports/demo-credential-autofill.md`.
+
+## Delivered at the time
 
 - Made the Demo clinician and Administrator tiles clickable.
-- In localhost development, either tile requests a normal audited server-side session for its selected seeded account. The API accepts only `clinician` or `admin` and retains the existing environment, host, CSRF, and rate-limit checks.
-- When the local shortcut is disabled, a tile selects the sign-in context, fills the configured default username, and focuses the password field. It does not fill a password because the application stores only password hashes and the seed password is one-time output.
-- Updated frontend and backend tests, API/security documentation, and the README.
+- In localhost development, either tile requested a normal audited server-side session for its selected seeded account. The API accepted only `clinician` or `admin` and retained environment, host, CSRF, and rate-limit checks.
+- When the local shortcut was disabled, a tile selected the sign-in context, filled the configured username, and focused the password field.
 
-## Gate results
+## Gate results at the time
 
-- `npm run test -- --run src/app/Login.test.tsx` (from `frontend/`) — passed, 4 tests.
-- `npm test` (from `frontend/`) — passed, 22 tests across 5 files.
-- `npm run build` (from `frontend/`) — passed, including TypeScript compilation and the Vite bundle.
-- `npm run check:raw` and `npm run check:contrast` (from `frontend/`) — passed; all measured token pairs remain above 4.5:1.
-- `..\.tools\python311\python.exe -m pytest tests/test_security_spine.py -q -k "not mutating_authenticated_routes_require_session"` (from `backend/`) — passed, 4 tests; the database-backed mutating-route test was excluded because PostgreSQL is unavailable.
-- `..\.tools\python311\python.exe -c "import json; from app.main import app; open('../docs/api/openapi.json','w',encoding='utf-8').write(json.dumps(app.openapi(),indent=2)+chr(10))"` (from `backend/`) — passed; refreshed the checked-in API schema.
-- `..\.tools\python311\python.exe -m json.tool ..\docs\api\openapi.json > $null` (from `backend/`) — passed; schema is valid JSON.
+- Frontend tests (22), production build, raw style scan, and contrast check passed.
+- Focused backend security checks passed, excluding a database-backed route test because PostgreSQL was unavailable.
+- OpenAPI regeneration and JSON parsing passed.
 
-## UNVERIFIED
+## UNVERIFIED at the time
 
-- Browser screenshot review at desktop, tablet, and mobile sizes, plus axe checks. The previous local browser attempt timed out.
-- PostgreSQL-backed demo sessions. Local database access is unavailable in this session.
-
-## Decision and limitation
-
-- Do not send, store, or expose the demo passwords in the login page. A localhost-only, CSRF-protected server-side session gives judges the same quick access without making hashed passwords retrievable.
-
-## Next verification
-
-- Inspect screenshots and the live seeded demo on a host with the browser and PostgreSQL stack available.
+- Browser screenshot review at desktop, tablet, and mobile sizes, plus axe checks.
+- PostgreSQL-backed demo sessions.

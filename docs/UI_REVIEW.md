@@ -94,4 +94,4 @@ Status: **UNVERIFIED** for screenshot review. The page now has a centered G One 
 
 # UI Review — Clickable demo access (2026-11-13)
 
-The two quick-access account tiles are now full keyboard-operable buttons. When the API enables local demo access, selecting one creates a normal session for that account; when disabled, it fills the username and focuses the password input. Passwords remain unavailable to the browser. Focused interaction and build checks passed. Visual browser review is **UNVERIFIED** because this session could not open the local Vite page; verify desktop, tablet, and mobile screenshots and axe checks when browser access is available.
+The two quick-access account tiles are full keyboard-operable buttons. When local demo access is enabled, selecting one fetches that account's credentials into the username and password fields and confirms the load inline; the password remains masked. Outside local development, selecting a tile fills the username only. The API rejects production/remote requests. Frontend visual browser review is **UNVERIFIED**; capture desktop, tablet, and mobile screenshots and run axe when browser access is available.

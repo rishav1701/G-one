@@ -91,25 +91,27 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DemoStatusOut"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/v1/auth/demo-login": {
+    "/api/v1/auth/demo-credentials": {
       "post": {
         "tags": [
           "authentication"
         ],
-        "summary": "Demo Login",
-        "operationId": "demo_login_api_v1_auth_demo_login_post",
+        "summary": "Demo Credentials",
+        "operationId": "demo_credentials_api_v1_auth_demo_credentials_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DemoLoginIn"
+                "$ref": "#/components/schemas/DemoAccountIn"
               }
             }
           },
@@ -120,7 +122,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DemoCredentialsOut"
+                }
               }
             }
           },
@@ -1622,7 +1626,7 @@
         ],
         "title": "AlertActionInput"
       },
-      "DemoLoginIn": {
+      "DemoAccountIn": {
         "properties": {
           "account": {
             "type": "string",
@@ -1636,7 +1640,48 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "title": "DemoLoginIn"
+        "title": "DemoAccountIn"
+      },
+      "DemoCredentialsOut": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "DemoCredentialsOut"
+      },
+      "DemoStatusOut": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "clinician_username": {
+            "type": "string",
+            "title": "Clinician Username"
+          },
+          "admin_username": {
+            "type": "string",
+            "title": "Admin Username"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "clinician_username",
+          "admin_username"
+        ],
+        "title": "DemoStatusOut"
       },
       "HTTPValidationError": {
         "properties": {
