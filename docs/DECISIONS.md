@@ -29,3 +29,4 @@
 - 2026-11-12: Retain the two simulator ward records during data reseeds so existing ward assignments and manual demo accounts remain valid as new scenarios are generated.
 - 2026-11-12: Keep the existing PhysioNet ICU sepsis candidate inactive and do not train a claimed ward model from simulator data, because the user has no ward dataset and the public candidate's cohort and outcome do not match G One.
 - 2026-11-12: Provide one-click SENIOR_CLINICIAN demo sign-in only in development on localhost; it creates a normal server-side session and never exposes the generated password, while production disables the route.
+- 2026-11-13: Adapt the judge-facing login example as a centered, light clinical-blue sign-in panel with a sign-in context selector and credential-safe demo tiles; keep authorization tied to the server account and retain G One's persistent simulation banner.
