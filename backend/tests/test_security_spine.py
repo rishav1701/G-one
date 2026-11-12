@@ -20,7 +20,7 @@ def test_mutating_authenticated_routes_require_session():
 def test_demo_login_is_local_opt_in_and_requires_csrf():
     from fastapi import HTTPException, Request, Response
     from app.core.config import settings
-    from app.api.auth import DemoLoginIn, _local_demo_request, demo_login
+    from app.api.auth import DemoLoginIn, _local_demo_request, demo_login, demo_status
     previous_enabled=settings.demo_login_enabled
     previous_environment=settings.environment
     settings.demo_login_enabled=True
@@ -30,6 +30,10 @@ def test_demo_login_is_local_opt_in_and_requires_csrf():
             return Request({"type":"http","method":"POST","scheme":"http","path":"/api/v1/auth/demo-login","query_string":b"","headers":[(b"host",host.encode())],"client":("127.0.0.1",1234),"server":(host,80),"root_path":""})
         local=request_for("localhost")
         assert _local_demo_request(local) is True
+        status=demo_status(local)
+        assert status["enabled"] is True
+        assert status["clinician_username"]
+        assert status["admin_username"]
         try:
             demo_login(DemoLoginIn(),local,Response(),None)
             assert False,"Missing CSRF token must be rejected before database access"
@@ -47,3 +51,17 @@ def test_demo_login_is_local_opt_in_and_requires_csrf():
     finally:
         settings.demo_login_enabled=previous_enabled
         settings.environment=previous_environment
+
+def test_demo_login_account_selection_is_allowlisted(monkeypatch):
+    from pydantic import ValidationError
+    from app.api.auth import DemoLoginIn, _demo_account
+    from app.models.base import Role
+    monkeypatch.setenv("SEED_ADMIN_USERNAME", "demo-admin")
+    monkeypatch.setenv("SEED_CLINICIAN_USERNAME", "demo-clinician")
+    assert _demo_account(DemoLoginIn(account="admin")) == (Role.ADMIN, "demo-admin")
+    assert _demo_account(DemoLoginIn(account="clinician")) == (Role.SENIOR_CLINICIAN, "demo-clinician")
+    try:
+        DemoLoginIn(account="viewer")
+        assert False, "Only the seeded demo administrator and clinician are allowed"
+    except ValidationError:
+        pass

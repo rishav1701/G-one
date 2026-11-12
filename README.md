@@ -31,7 +31,7 @@ Open [http://localhost:8080](http://localhost:8080) and sign in. The health chec
 
 The two demo passwords are generated only when the accounts are first created and printed once. Re-running the seed preserves existing passwords. If a password is lost, use a fresh local database volume for a clean demo setup; do not add a shared password to the repository.
 
-On the loopback-only Docker Compose demo, the login page also offers **Continue as demo clinician**. It creates a normal server-side session for `phaseclinician` without displaying or autofilling its password. The endpoint is enabled only in development and only for localhost requests; it is unavailable when `ENVIRONMENT=production`.
+On the loopback-only Docker Compose demo, both quick-access account tiles are clickable. They create a normal server-side session for the selected seeded clinician or administrator without displaying or autofilling either password. This shortcut is enabled only in development for localhost requests; it is unavailable when `ENVIRONMENT=production`. When the shortcut is disabled, a tile fills the username and you enter the one-time password printed at account creation.
 
 Other demo commands:
 

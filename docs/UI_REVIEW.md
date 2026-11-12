@@ -91,3 +91,7 @@ On a working demo host, capture and inspect every route at 1440×900, 1024×768,
 # UI Review — Login visual refresh (2026-11-13)
 
 Status: **UNVERIFIED** for screenshot review. The page now has a centered G One identity, clinical/administration sign-in context selector, credential form, local demo clinician tile, and administrator account guidance. It keeps the persistent simulation disclaimer and existing light clinical-blue/neutral tokens; no passwords are shown or autofilled. The context selector does not grant permissions. Focused login tests, production build, raw style value scan, and contrast script passed. An in-app browser connection to the local Vite server timed out; desktop browser inspection was unavailable because the current URL could not be identified. Capture 1440×900, 1024×768, and 390×844 screenshots and inspect wrapping, keyboard focus, and page overflow when a browser is available.
+
+# UI Review — Clickable demo access (2026-11-13)
+
+The two quick-access account tiles are now full keyboard-operable buttons. When the API enables local demo access, selecting one creates a normal session for that account; when disabled, it fills the username and focuses the password input. Passwords remain unavailable to the browser. Focused interaction and build checks passed. Visual browser review is **UNVERIFIED** because this session could not open the local Vite page; verify desktop, tablet, and mobile screenshots and axe checks when browser access is available.

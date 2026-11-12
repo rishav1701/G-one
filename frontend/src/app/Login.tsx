@@ -13,12 +13,14 @@ export default function Login(){
  const[busy,setBusy]=useState(false);
  const[visible,setVisible]=useState(false);
  const[demoAvailable,setDemoAvailable]=useState(false);
+ const[demoStatusReady,setDemoStatusReady]=useState(false);
+ const[demoAccounts,setDemoAccounts]=useState({clinician:'phaseclinician',admin:'phaseadmin'});
  const[mode,setMode]=useState<AccessMode>('clinical');
  const{login,demoLogin}=useAuth();
  const navigate=useNavigate();
  useEffect(()=>{
   let mounted=true;
-  api<{enabled:boolean}>('/auth/demo-status').then(result=>{if(mounted)setDemoAvailable(result.enabled)}).catch(()=>{if(mounted)setDemoAvailable(false)});
+  api<{enabled:boolean;clinician_username?:string;admin_username?:string}>('/auth/demo-status').then(result=>{if(mounted){setDemoAvailable(result.enabled);setDemoAccounts({clinician:result.clinician_username||'phaseclinician',admin:result.admin_username||'phaseadmin'})}}).catch(()=>{if(mounted)setDemoAvailable(false)}).finally(()=>{if(mounted)setDemoStatusReady(true)});
   return()=>{mounted=false};
  },[]);
  async function submit(e:React.FormEvent){
@@ -27,11 +29,18 @@ export default function Login(){
   catch(err){setError(err instanceof Error?err.message:'Unable to sign in')}
   finally{setBusy(false)}
  }
- async function submitDemo(){
+ async function submitDemo(account:'clinician'|'admin'){
   setError('');setBusy(true);
-  try{await demoLogin();navigate('/dashboard',{replace:true})}
+  try{await demoLogin(account);navigate('/dashboard',{replace:true})}
   catch(err){setError(err instanceof Error?err.message:'Demo sign-in is unavailable')}
   finally{setBusy(false)}
+ }
+ function useDemoAccount(account:'clinician'|'admin'){
+  if(demoAvailable){void submitDemo(account);return}
+  setMode(account==='admin'?'administration':'clinical');
+  setUsername(account==='admin'?demoAccounts.admin:demoAccounts.clinician);
+  setPassword('');setError('');
+  window.setTimeout(()=>document.getElementById('password')?.focus(),0);
  }
  const isClinical=mode==='clinical';
  return <>
@@ -65,18 +74,18 @@ export default function Login(){
     <section className="login-demo" aria-labelledby="login-demo-title">
      <h2 id="login-demo-title">Quick demo access</h2>
      <div className="login-access-grid">
-      <div className="login-access-tile">
+      <button type="button" className="login-access-tile quick-access-button" disabled={busy||!demoStatusReady} onClick={()=>useDemoAccount('clinician')}>
        <strong>Demo clinician</strong>
-       <span>phaseclinician</span>
-       {demoAvailable?<button type="button" className="demo-access-button" disabled={busy} onClick={submitDemo}>{busy?'Starting session…':'Continue as clinician'}<ArrowRight size={14} aria-hidden="true"/></button>:<span className="access-hint">Start the local demo to enable one-click access.</span>}
-      </div>
-      <div className="login-access-tile">
+       <span>{demoAccounts.clinician}</span>
+       <span className="access-hint">{!demoStatusReady?'Checking local access…':demoAvailable?(busy?'Starting session…':'Continue as clinician'): 'Select to enter the username, then use the one-time password.'}<ArrowRight size={14} aria-hidden="true"/></span>
+      </button>
+      <button type="button" className="login-access-tile quick-access-button" disabled={busy||!demoStatusReady} onClick={()=>useDemoAccount('admin')}>
        <strong>Administrator</strong>
-       <span>phaseadmin</span>
-       <span className="access-hint">Use the one-time password printed when the demo account was created.</span>
-      </div>
+       <span>{demoAccounts.admin}</span>
+       <span className="access-hint">{!demoStatusReady?'Checking local access…':demoAvailable?(busy?'Starting session…':'Continue as administrator'):'Select to enter the username, then use the one-time password.'}<ArrowRight size={14} aria-hidden="true"/></span>
+      </button>
      </div>
-     <p className="demo-footnote">Demo access is local-only. Administrator accounts cannot enter or change clinical records.</p>
+     <p className="demo-footnote">Local one-click access is only available on the development demo. Passwords are not shown in the browser. Administrator accounts cannot enter or change clinical records.</p>
     </section>
    </section>
    <footer className="login-footer">G One · simulated ward monitoring demonstration</footer>

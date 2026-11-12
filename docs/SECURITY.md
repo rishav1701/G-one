@@ -18,7 +18,7 @@
 | Audit append-only | PASS | Simulator/alert tests verify audit rows cannot be updated or deleted. |
 | Ingestion idempotency | PASS | Clinical API tests verify duplicate ingestion handling and assessment recomputation. |
 | Model loading | PASS | Registry accepts only `models/active`, validates manifest acceptance and artifact hashes, and rejects invalid paths or changed files. No model upload route exists. |
-| Local demo sign-in | PASS | The optional demo-login endpoint is disabled outside development, reports availability only for localhost, requires the pre-login CSRF token, issues the normal hashed server-side session, and does not return or store a password in the browser. Compose binds to loopback by default. |
+| Local demo sign-in | PASS | The optional demo-login endpoint is disabled outside development, reports availability only for localhost, requires the pre-login CSRF token, and accepts only the seeded SENIOR_CLINICIAN or ADMIN account. It issues a normal hashed server-side session, records an audit event, and does not return or store a password in the browser. Compose binds to loopback by default. |
 | Pinned dependencies and vulnerability scan | PASS | Direct frontend dependencies and Python requirements are pinned. `npm audit` reports 0 vulnerabilities. `pip-audit --local` reports no known vulnerabilities. |
 
 ## Dependency fixes

@@ -1,5 +1,6 @@
 import hashlib, secrets, uuid
 import os
+from typing import Literal
 from collections import defaultdict, deque
 from time import monotonic
 from datetime import datetime, timedelta, timezone
@@ -17,7 +18,7 @@ _attempts=defaultdict(deque)
 def digest(v:str)->str: return hashlib.sha256(v.encode()).hexdigest()
 def utcnow(): return datetime.now(timezone.utc)
 class LoginIn(BaseModel): model_config=ConfigDict(extra="forbid"); username:str=Field(min_length=1,max_length=120); password:str=Field(min_length=1,max_length=256)
-class DemoLoginIn(BaseModel): model_config=ConfigDict(extra="forbid")
+class DemoLoginIn(BaseModel): model_config=ConfigDict(extra="forbid"); account:Literal["clinician","admin"]="clinician"
 class PasswordIn(BaseModel): model_config=ConfigDict(extra="forbid"); current_password:str; new_password:str=Field(min_length=12,max_length=256)
 def current_session(request:Request, db:DBSession=Depends(get_db)):
     raw=request.cookies.get("g_one_session")
@@ -80,7 +81,16 @@ def _local_demo_request(request: Request) -> bool:
 
 @router.get("/demo-status")
 def demo_status(request: Request):
-    return {"enabled": _local_demo_request(request)}
+    return {
+        "enabled": _local_demo_request(request),
+        "clinician_username": os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician"),
+        "admin_username": os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin"),
+    }
+
+def _demo_account(data: DemoLoginIn):
+    if data.account == "admin":
+        return Role.ADMIN, os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin")
+    return Role.SENIOR_CLINICIAN, os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician")
 
 @router.post("/demo-login")
 def demo_login(data:DemoLoginIn,request:Request,response:Response,db:DBSession=Depends(get_db)):
@@ -93,8 +103,8 @@ def demo_login(data:DemoLoginIn,request:Request,response:Response,db:DBSession=D
     while attempts and now_m-attempts[0]>60: attempts.popleft()
     if len(attempts)>=20: raise HTTPException(429,"Too many attempts. Try again later")
     attempts.append(now_m)
-    username=os.environ.get("SEED_CLINICIAN_USERNAME","phaseclinician")
-    user=db.query(AppUser).filter_by(username=username,role=Role.SENIOR_CLINICIAN,active=True).first()
+    role,username=_demo_account(data)
+    user=db.query(AppUser).filter_by(username=username,role=role,active=True).first()
     if user is None:
         raise HTTPException(503,"Demo account is not ready. Run the demo seed command first.")
     now=utcnow(); raw=secrets.token_urlsafe(32); csrf=secrets.token_urlsafe(32)

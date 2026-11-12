@@ -52,6 +52,7 @@ See `docs/ENVIRONMENT.md`. Phase gates requiring PostgreSQL, Python, Playwright/
 - The released seed creates only an ADMIN login, while the authorization rules correctly block admins from clinical entry. Create a separate random-password SENIOR_CLINICIAN demo login with access to the simulator wards, and print its credentials only when it is first created.
 - The login screen and quick start do not tell a judge which account supports clinical actions. Add terse login guidance and a judge run-through to the README.
 - The user requested in-page one-click sign-in. Provide it only as a development localhost flow that issues a normal server-side session and never exposes the generated password.
+- Follow-up: make the clinician and administrator quick-access tiles clickable. Keep the password hashes and one-time passwords private; the development localhost flow may issue a normal audited session for either seeded account. When that flow is disabled, selecting a tile fills the username only.
 - Keep the trained PhysioNet 2019 ICU sepsis candidate inactive and accurately labelled. It is not a ward deterioration model, and its metrics must not be presented as G One ward performance.
 - Retain the six deterministic simulated scenarios as starter records; manual observations remain possible on those synthetic patients.
 

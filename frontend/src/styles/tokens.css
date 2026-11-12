@@ -24,9 +24,11 @@
 .login-demo h2{margin:0 0 var(--space-3);font-size:var(--font-14);font-weight:600;color:var(--slate-900)}
 .login-access-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
 .login-access-tile{min-width:0;padding:var(--space-3);display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-1);border:var(--border-1) solid var(--slate-200);border-radius:var(--radius-control);background:var(--slate-50)}
+.quick-access-button{width:100%;font:inherit;text-align:left;cursor:pointer}
+.quick-access-button:hover:not(:disabled){border-color:var(--blue-600);background:white}
 .login-access-tile strong{color:var(--blue-700);font-weight:600}
 .login-access-tile>span{color:var(--slate-600);font-size:var(--font-12)}
-.login-access-tile .access-hint{line-height:1.4}
+.login-access-tile .access-hint{display:flex;align-items:center;gap:var(--space-1);line-height:1.4}
 .demo-access-button{min-height:32px;margin-top:auto;padding:var(--space-1) 0;display:flex;align-items:center;gap:var(--space-1);border:0;background:transparent;color:var(--blue-700);font-weight:600;text-align:left}
 .demo-footnote{margin:var(--space-3) 0 0;font-size:var(--font-12);line-height:1.4}
 .login-footer{margin-top:auto;padding-top:var(--space-5);color:var(--slate-600);font-size:var(--font-13);text-align:center}
