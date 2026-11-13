@@ -1,4 +1,3 @@
-import os
 import uuid
 
 from argon2 import PasswordHasher
@@ -35,7 +34,7 @@ def seed_users(
         )
         db.add(admin)
         db.flush()
-        messages.append(f"Generated one-time password for ADMIN {admin_username}: {admin_password}")
+        messages.append(f"Created ADMIN demo account {admin_username}.")
     elif admin.role is not Role.ADMIN:
         messages.append(
             f"{admin_username} exists with a different role; no changes were made. "
@@ -60,13 +59,6 @@ def seed_users(
             select(Ward).where(Ward.name.like("Simulation Ward %")).order_by(Ward.name)
         ).all()
     )
-    if not simulated_wards:
-        messages.append(
-            "No simulator wards exist. Run the simulator reset command, then seed users again."
-        )
-        db.commit()
-        return messages
-
     clinician = db.scalar(select(AppUser).where(AppUser.username == clinician_username))
     if clinician is None:
         clinician = AppUser(
@@ -77,10 +69,7 @@ def seed_users(
         )
         db.add(clinician)
         db.flush()
-        messages.append(
-            "Generated one-time password for SENIOR_CLINICIAN "
-            f"{clinician_username}: {clinician_password}"
-        )
+        messages.append(f"Created SENIOR_CLINICIAN demo account {clinician_username}.")
     elif clinician.role is not Role.SENIOR_CLINICIAN:
         messages.append(
             f"{clinician_username} exists with a different role; no changes were made. "
@@ -101,6 +90,13 @@ def seed_users(
                 f"SENIOR_CLINICIAN {clinician_username} already exists; credentials were not changed."
             )
 
+    if not simulated_wards:
+        messages.append(
+            "No simulator wards exist; the clinician account will receive ward access after simulator seeding."
+        )
+        db.commit()
+        return messages
+
     ward_ids = {ward.id for ward in simulated_wards}
     assigned_ids = set(
         db.scalars(select(UserWard.ward_id).where(UserWard.user_id == clinician.id)).all()
@@ -114,19 +110,11 @@ def seed_users(
 
 
 def main():
-    admin_username = os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin")
-    clinician_username = os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician")
-    development = os.environ.get("ENVIRONMENT", "development") == "development"
-    if development:
-        admin_password = DEMO_ACCOUNT_PASSWORDS["admin"]
-        clinician_password = DEMO_ACCOUNT_PASSWORDS["clinician"]
-        sync_demo_passwords = True
-    else:
-        admin_password = os.environ.get("SEED_ADMIN_PASSWORD", "")
-        clinician_password = os.environ.get("SEED_CLINICIAN_PASSWORD", "")
-        if not admin_password or not clinician_password:
-            raise RuntimeError("Production seeding requires SEED_ADMIN_PASSWORD and SEED_CLINICIAN_PASSWORD.")
-        sync_demo_passwords = False
+    admin_username = "phaseadmin"
+    clinician_username = "phaseclinician"
+    admin_password = DEMO_ACCOUNT_PASSWORDS["admin"]
+    clinician_password = DEMO_ACCOUNT_PASSWORDS["clinician"]
+    sync_demo_passwords = True
 
     db = SessionLocal()
     try:

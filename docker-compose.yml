@@ -24,15 +24,10 @@ services:
       APP_SECRET: ${APP_SECRET:?Run scripts/init-env.ps1 first}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8080}
       GONE_ROOT: /app
-      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-phaseadmin}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
-      SEED_CLINICIAN_USERNAME: ${SEED_CLINICIAN_USERNAME:-phaseclinician}
-      SEED_CLINICIAN_PASSWORD: ${SEED_CLINICIAN_PASSWORD:-}
-      DEMO_LOGIN_ENABLED: ${DEMO_LOGIN_ENABLED:-true}
     depends_on:
       db:
         condition: service_healthy
-    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    command: ["sh", "-c", "alembic upgrade head && if [ \"${ENVIRONMENT:-development}\" = development ]; then python -m app.seed; fi && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
       interval: 5s

@@ -1,6 +1,4 @@
 import hashlib, secrets, uuid
-import os
-from typing import Literal
 from collections import defaultdict, deque
 from time import monotonic
 from datetime import datetime, timedelta, timezone
@@ -10,7 +8,6 @@ from sqlalchemy.orm import Session as DBSession
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
 from app.core.config import settings
-from app.core.demo_credentials import DEMO_ACCOUNT_PASSWORDS
 from app.core.db import get_db
 from app.models.base import AppUser, AuditLog, Role, Session
 router=APIRouter(prefix="/api/v1/auth", tags=["authentication"])
@@ -19,9 +16,6 @@ _attempts=defaultdict(deque)
 def digest(v:str)->str: return hashlib.sha256(v.encode()).hexdigest()
 def utcnow(): return datetime.now(timezone.utc)
 class LoginIn(BaseModel): model_config=ConfigDict(extra="forbid"); username:str=Field(min_length=1,max_length=120); password:str=Field(min_length=1,max_length=256)
-class DemoAccountIn(BaseModel): model_config=ConfigDict(extra="forbid"); account:Literal["clinician","admin"]="clinician"
-class DemoStatusOut(BaseModel): enabled:bool; clinician_username:str; admin_username:str
-class DemoCredentialsOut(BaseModel): username:str; password:str
 class PasswordIn(BaseModel): model_config=ConfigDict(extra="forbid"); current_password:str; new_password:str=Field(min_length=12,max_length=256)
 def current_session(request:Request, db:DBSession=Depends(get_db)):
     raw=request.cookies.get("g_one_session")
@@ -74,58 +68,6 @@ def login(data:LoginIn, request:Request, response:Response, db:DBSession=Depends
     response.set_cookie("g_one_csrf",csrf,httponly=False,secure=(settings.environment != "development" or settings.cookie_secure),samesite="lax",max_age=settings.session_absolute_hours*3600,path="/")
     response.delete_cookie("g_one_pre_csrf",path="/")
     return {"id":user.id,"username":user.username,"role":user.role.value,"csrf_token":csrf}
-
-def _local_demo_request(request: Request) -> bool:
-    return (
-        settings.demo_login_enabled
-        and settings.environment == "development"
-        and request.url.hostname in {"localhost", "127.0.0.1", "::1"}
-    )
-
-@router.get("/demo-status",response_model=DemoStatusOut)
-def demo_status(request: Request):
-    return {
-        "enabled": _local_demo_request(request),
-        "clinician_username": os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician"),
-        "admin_username": os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin"),
-    }
-
-@router.post("/demo-credentials",response_model=DemoCredentialsOut)
-def demo_credentials(data:DemoAccountIn,request:Request,response:Response,db:DBSession=Depends(get_db)):
-    if not _local_demo_request(request):
-        raise HTTPException(404,"Not found")
-    pre_cookie=request.cookies.get("g_one_pre_csrf",""); pre_header=request.headers.get("X-CSRF-Token","")
-    if not pre_cookie or not secrets.compare_digest(pre_cookie,pre_header):
-        raise HTTPException(403,"CSRF validation failed")
-    now_m=monotonic(); address=request.client.host if request.client else "unknown"; attempts=_attempts[address]
-    while attempts and now_m-attempts[0]>60: attempts.popleft()
-    if len(attempts)>=20: raise HTTPException(429,"Too many attempts. Try again later")
-    attempts.append(now_m)
-    role,username=_demo_account(data)
-    password=DEMO_ACCOUNT_PASSWORDS[data.account]
-    user=db.query(AppUser).filter_by(username=username,role=role,active=True).first()
-    if user is None:
-        raise HTTPException(503,"Local demo credentials are not ready. Run scripts/demo.ps1 first.")
-    try:
-        password_matches=hasher.verify(user.password_hash,password)
-    except (VerifyMismatchError,InvalidHashError):
-        password_matches=False
-    if not password_matches:
-        db.query(Session).filter_by(user_id=user.id).delete(synchronize_session=False)
-        user.password_hash=hasher.hash(password)
-        user.failed_logins=0
-        user.locked_until=None
-        db.add(AuditLog(actor_id=None,action="auth.demo_credentials_sync",object_type="app_user",object_id=user.id,request_id=getattr(request.state,"request_id","unknown")))
-    db.add(AuditLog(actor_id=None,action="auth.demo_credentials_fetch",object_type="app_user",object_id=user.id,request_id=getattr(request.state,"request_id","unknown")))
-    db.commit()
-    response.headers["Cache-Control"]="no-store, no-cache, must-revalidate"
-    response.headers["Pragma"]="no-cache"
-    return {"username":username,"password":password}
-
-def _demo_account(data: DemoAccountIn):
-    if data.account == "admin":
-        return Role.ADMIN, os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin")
-    return Role.SENIOR_CLINICIAN, os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician")
 
 @router.get("/me")
 def me(request:Request,user:AppUser=Depends(current_session)):

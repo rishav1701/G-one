@@ -6,7 +6,7 @@
 
 | Control | Result | Evidence |
 |---|---|---|
-| Production credentials | PASS | Production seed passwords come from `SEED_ADMIN_PASSWORD` and `SEED_CLINICIAN_PASSWORD`; `.env.example` contains blank placeholders. Local demo passwords are intentionally public constants for the localhost demonstration only and are not production credentials. |
+| Demo credentials | DEMO ONLY | The shared demo credentials are public constants shown by the login buttons and stored as Argon2 hashes in PostgreSQL. They are not suitable for a sensitive or clinical deployment. |
 | `.env.example` placeholders | PASS | `.env.example` contains placeholders only. `scripts/init-env.ps1` generates random database and application secrets into the git-ignored `.env`. No local `.env` is tracked. |
 | CORS restricted to exact frontend origin | PASS | `backend/app/main.py` sets `allow_origins=[settings.frontend_origin]` and does not enable wildcard origins. |
 | Security headers | PASS | Middleware sets CSP with `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a request ID. |
@@ -18,7 +18,7 @@
 | Audit append-only | PASS | Simulator/alert tests verify audit rows cannot be updated or deleted. |
 | Ingestion idempotency | PASS | Clinical API tests verify duplicate ingestion handling and assessment recomputation. |
 | Model loading | PASS | Registry accepts only `models/active`, validates manifest acceptance and artifact hashes, and rejects invalid paths or changed files. No model upload route exists. |
-| Local demo credential autofill | PASS | `/auth/demo-credentials` returns one selected local demo account's public development credential only in development for localhost, after CSRF and rate-limit checks. If needed, it repairs the seeded Argon2 hash, revokes that account's existing sessions, and audits the sync and fetch without recording credential values. Responses are not cached. Production rejects the endpoint; Compose binds to loopback by default. |
+| Demo login controls | PASS | Buttons fill the static demo username and password locally without an API request. The server still verifies the password hash and uses the normal session, CSRF, lockout, and role controls. Development Compose reseeds the fixed demo hashes at container start. |
 | Pinned dependencies and vulnerability scan | PASS | Direct frontend dependencies and Python requirements are pinned. `npm audit` reports 0 vulnerabilities. `pip-audit --local` reports no known vulnerabilities. |
 
 ## Dependency fixes
@@ -42,7 +42,7 @@ Gitleaks is not installed. The fallback grep scanned tracked file contents for p
 
 ## Local demo account limitation
 
-The two development demo passwords are intentionally fixed and visible in `backend/app/core/demo_credentials.py` so the local quick-access buttons can populate both login fields on every run. This is a public demonstration convenience, not a secret or a production account pattern. Do not expose the development credential endpoint on a hosted deployment. Production accounts use supplied passwords and store only Argon2 hashes.
+The two demo passwords are intentionally fixed in frontend and backend source so the quick-access buttons can populate both login fields immediately. They are public demonstration credentials, not secrets or a production account pattern. Do not use these shared accounts for sensitive or clinical deployment. Passwords are stored as Argon2 hashes in the database.
 
 ## Remaining review limits
 

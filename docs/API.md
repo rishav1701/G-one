@@ -6,7 +6,7 @@ All application routes are under `/api/v1`. Session authentication uses an HttpO
 
 ## Route groups
 
-- `/auth`: CSRF challenge, login, current session, logout, password change, and local-demo status and credential retrieval. `/auth/demo-credentials` accepts only `account: clinician` or `account: admin`; it is enabled only in development for localhost requests, requires CSRF, is rate-limited, synchronizes the selected account to its stable public demo password if needed, audits sync/fetch without credential values, and returns a no-cache response. Production does not expose this route.
+- `/auth`: CSRF challenge, login, current session, logout, and password change. Demo quick-access values are filled in the browser; login still uses the normal authenticated account flow. There are no demo-status or credential-retrieval routes.
 - `/admissions`, `/patients`, `/observations`: scoped worklist/detail reads, single and batch observation ingestion, risk assessments and explanations.
 - `/alerts`: alert list and lifecycle actions, response history, and escalation details.
 - `/admin`: user and ward management, operational configuration, system status, audit events, simulator reset and simulated clock controls.

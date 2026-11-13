@@ -1,8 +1,8 @@
-import {useEffect,useState} from 'react';
+import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Activity,ArrowRight,Eye,EyeOff,LockKeyhole,ShieldCheck,UserRound} from 'lucide-react';
 import {useAuth} from './Auth';
-import {api} from '../lib/api';
+import {DEMO_ACCOUNTS} from './demoAccounts';
 
 type AccessMode='clinical'|'administration';
 
@@ -13,41 +13,22 @@ export default function Login(){
  const[credentialNotice,setCredentialNotice]=useState('');
  const[busy,setBusy]=useState(false);
  const[visible,setVisible]=useState(false);
- const[demoAvailable,setDemoAvailable]=useState(false);
- const[demoStatusReady,setDemoStatusReady]=useState(false);
- const[demoAccounts,setDemoAccounts]=useState({clinician:'phaseclinician',admin:'phaseadmin'});
  const[mode,setMode]=useState<AccessMode>('clinical');
- const{login,demoCredentials}=useAuth();
+ const{login}=useAuth();
  const navigate=useNavigate();
- useEffect(()=>{
-  let mounted=true;
-  api<{enabled:boolean;clinician_username?:string;admin_username?:string}>('/auth/demo-status').then(result=>{if(mounted){setDemoAvailable(result.enabled);setDemoAccounts({clinician:result.clinician_username||'phaseclinician',admin:result.admin_username||'phaseadmin'})}}).catch(()=>{if(mounted)setDemoAvailable(false)}).finally(()=>{if(mounted)setDemoStatusReady(true)});
-  return()=>{mounted=false};
- },[]);
  async function submit(e:React.FormEvent){
   e.preventDefault();setError('');setCredentialNotice('');setBusy(true);
   try{await login(username,password);navigate('/dashboard',{replace:true})}
   catch(err){setError(err instanceof Error?err.message:'Unable to sign in')}
   finally{setBusy(false)}
  }
- async function useDemoAccount(account:'clinician'|'admin'){
+ function useDemoAccount(account:'clinician'|'admin'){
   setMode(account==='admin'?'administration':'clinical');
   setCredentialNotice('');setError('');
-  if(!demoAvailable){
-   setUsername(account==='admin'?demoAccounts.admin:demoAccounts.clinician);setPassword('');
-   window.setTimeout(()=>document.getElementById('password')?.focus(),0);
-   return;
-  }
-  setBusy(true);
-  try{
-   const credentials=await demoCredentials(account);
-   setUsername(credentials.username);setPassword(credentials.password);
-   setCredentialNotice(`Demo ${account==='admin'?'administrator':'clinician'} username and password loaded. Select Sign in to continue.`);
-   window.setTimeout(()=>document.getElementById('password')?.focus(),0);
-  }catch(err){
-   setUsername(account==='admin'?demoAccounts.admin:demoAccounts.clinician);setPassword('');
-   setError(err instanceof Error?err.message:'Unable to load local demo credentials');
-  }finally{setBusy(false)}
+  const credentials=DEMO_ACCOUNTS[account];
+  setUsername(credentials.username);setPassword(credentials.password);
+  setCredentialNotice(`Demo ${account==='admin'?'administrator':'clinician'} username and password loaded. Select Sign in to continue.`);
+  window.setTimeout(()=>document.getElementById('password')?.focus(),0);
  }
  const isClinical=mode==='clinical';
  return <>
@@ -82,18 +63,18 @@ export default function Login(){
     <section className="login-demo" aria-labelledby="login-demo-title">
      <h2 id="login-demo-title">Quick demo access</h2>
      <div className="login-access-grid">
-      <button type="button" className="login-access-tile quick-access-button" disabled={busy||!demoStatusReady} onClick={()=>{void useDemoAccount('clinician')}}>
+      <button type="button" className="login-access-tile quick-access-button" disabled={busy} onClick={()=>useDemoAccount('clinician')}>
        <strong>Demo clinician</strong>
-       <span>{demoAccounts.clinician}</span>
-       <span className="access-hint">{!demoStatusReady?'Checking local access…':demoAvailable?(busy?'Loading login details…':'Load username and password'): 'Select to fill username; enter the one-time password.'}<ArrowRight size={14} aria-hidden="true"/></span>
+       <span>{DEMO_ACCOUNTS.clinician.username}</span>
+       <span className="access-hint">Load username and password<ArrowRight size={14} aria-hidden="true"/></span>
       </button>
-      <button type="button" className="login-access-tile quick-access-button" disabled={busy||!demoStatusReady} onClick={()=>{void useDemoAccount('admin')}}>
+      <button type="button" className="login-access-tile quick-access-button" disabled={busy} onClick={()=>useDemoAccount('admin')}>
        <strong>Administrator</strong>
-       <span>{demoAccounts.admin}</span>
-       <span className="access-hint">{!demoStatusReady?'Checking local access…':demoAvailable?(busy?'Loading login details…':'Load username and password'):'Select to fill username; enter the one-time password.'}<ArrowRight size={14} aria-hidden="true"/></span>
+       <span>{DEMO_ACCOUNTS.admin.username}</span>
+       <span className="access-hint">Load username and password<ArrowRight size={14} aria-hidden="true"/></span>
       </button>
      </div>
-     <p className="demo-footnote">Credential autofill is available only on the localhost development demo. Administrator accounts cannot enter or change clinical records.</p>
+     <p className="demo-footnote">Public demo accounts are for this simulated demonstration. Administrator accounts cannot enter or change clinical records.</p>
     </section>
    </section>
    <footer className="login-footer">G One · simulated ward monitoring demonstration</footer>

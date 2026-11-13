@@ -94,4 +94,4 @@ Status: **UNVERIFIED** for screenshot review. The page now has a centered G One 
 
 # UI Review — Clickable demo access (2026-11-13)
 
-The two quick-access account tiles are full keyboard-operable buttons. When local demo access is enabled, selecting one fetches that account's credentials into the username and password fields and confirms the load inline; the password remains masked. Outside local development, selecting a tile fills the username only. The API rejects production/remote requests. Frontend visual browser review is **UNVERIFIED**; capture desktop, tablet, and mobile screenshots and run axe when browser access is available.
+The two quick-access account tiles are full keyboard-operable buttons. Selecting one synchronously fills its fixed demo username and password into the login fields with no API request; the password remains masked. The normal database-backed login still validates the credentials. Frontend visual browser review is **UNVERIFIED**; capture desktop, tablet, and mobile screenshots and run axe when browser access is available.

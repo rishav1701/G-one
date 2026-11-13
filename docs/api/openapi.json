@@ -79,68 +79,6 @@
         }
       }
     },
-    "/api/v1/auth/demo-status": {
-      "get": {
-        "tags": [
-          "authentication"
-        ],
-        "summary": "Demo Status",
-        "operationId": "demo_status_api_v1_auth_demo_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DemoStatusOut"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/demo-credentials": {
-      "post": {
-        "tags": [
-          "authentication"
-        ],
-        "summary": "Demo Credentials",
-        "operationId": "demo_credentials_api_v1_auth_demo_credentials_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DemoAccountIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DemoCredentialsOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/auth/me": {
       "get": {
         "tags": [
@@ -1625,63 +1563,6 @@
           "action"
         ],
         "title": "AlertActionInput"
-      },
-      "DemoAccountIn": {
-        "properties": {
-          "account": {
-            "type": "string",
-            "enum": [
-              "clinician",
-              "admin"
-            ],
-            "title": "Account",
-            "default": "clinician"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "DemoAccountIn"
-      },
-      "DemoCredentialsOut": {
-        "properties": {
-          "username": {
-            "type": "string",
-            "title": "Username"
-          },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
-        "title": "DemoCredentialsOut"
-      },
-      "DemoStatusOut": {
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled"
-          },
-          "clinician_username": {
-            "type": "string",
-            "title": "Clinician Username"
-          },
-          "admin_username": {
-            "type": "string",
-            "title": "Admin Username"
-          }
-        },
-        "type": "object",
-        "required": [
-          "enabled",
-          "clinician_username",
-          "admin_username"
-        ],
-        "title": "DemoStatusOut"
       },
       "HTTPValidationError": {
         "properties": {

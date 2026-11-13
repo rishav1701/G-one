@@ -17,21 +17,21 @@ Use PowerShell from the repository root. Docker Desktop/Engine must be running.
 .\scripts\demo.ps1
 ```
 
-The setup script creates or updates a git-ignored `.env` with random database and application secrets. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates or synchronizes two stable local demo accounts. Their fixed development-demo passwords are defined in the backend; PostgreSQL stores only Argon2 password hashes. The default usernames are `phaseadmin` (administration and simulator controls) and `phaseclinician` (patient records, manual observations, and clinical actions). These public demo accounts are for localhost demonstration only, not production.
+The setup script creates or updates a git-ignored `.env` with random database and application secrets. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates or synchronizes two stable demo accounts. PostgreSQL stores only Argon2 password hashes. These credentials are intentionally public and are only for this simulated demonstration: `phaseadmin` / `admin321` (administration and simulator controls) and `phaseclinician` / `clinical321` (patient records, manual observations, and clinical actions).
 
 Open [http://localhost:8080](http://localhost:8080) and sign in. The health check is [http://localhost:8080/health](http://localhost:8080/health).
 
 ### Judge run-through
 
-1. On the local Compose demo, click **Demo clinician** or **Administrator** under Quick demo access. The matching username and password are fetched into the masked sign-in fields; select **Sign in** to continue. The clinician account supports patient records, manual observations, and clinical alert actions. The administrator account supports administration and cannot take clinical actions.
+1. Click **Demo clinician** or **Administrator** under Quick demo access. The matching username and password fill the masked sign-in fields immediately, without an API request; select **Sign in** to continue. The clinician account supports patient records, manual observations, and clinical alert actions. The administrator account supports administration and cannot take clinical actions.
 2. Open the dashboard worklist, then select `SIM-000003` to inspect a simulated gradual-deterioration case and its NEWS2 explanation.
 3. On the patient page, use **Enter observation** to submit a manual set of observed values. The returned NEWS2 assessment appears on the page. The values remain demonstration input and do not change the model state.
 4. Open **Alerts** to review the explanation and history, record a response, and resolve through the confirmation flow.
 5. Use the patient directory to inspect `SIM-000007` (missing observations), `SIM-000009` (sensor disconnection), and `SIM-000011` (data-quality scenario). These are fixed simulated cases, not real patients.
 
-Running `scripts/demo.ps1` or `scripts/seed.ps1` synchronizes existing local demo account hashes to the same stable demo passwords and revokes their existing sessions. Clicking a quick-access tile also repairs that account's hash if needed, then loads the username and password into the form. Production seeding uses separately supplied `SEED_*_PASSWORD` values; the local demo credentials endpoint is unavailable outside localhost development.
+Running `scripts/demo.ps1` or `scripts/seed.ps1` synchronizes the seeded demo account hashes to the stable passwords and revokes existing sessions. The buttons fill their fixed values in the browser; sign-in is still checked against the database. These shared credentials are public by design and must not be used for real clinical or other sensitive deployments.
 
-On the loopback-only Docker Compose demo, both quick-access tiles fetch their account's username and password into the sign-in form. Credential retrieval is enabled by default in development for localhost requests, requires CSRF, is rate-limited, and is not cached. Outside that local demo, credential retrieval is rejected.
+The quick-access tiles fill fixed demo credentials directly in the browser without checking the server first: `phaseclinician` / `clinical321` and `phaseadmin` / `admin321`. The regular login API validates those credentials against Argon2 hashes in PostgreSQL. The demo service synchronizes the hashes from these constants when it starts in development and when `scripts/demo.ps1` seeds the demo. These shared credentials are public and intended only for this simulated demonstration.
 
 Other demo commands:
 

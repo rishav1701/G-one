@@ -18,5 +18,5 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Simulator seed failed.' }
     docker compose exec -T backend python -m app.seed
     if ($LASTEXITCODE -ne 0) { throw 'Demo user seed failed.' }
-    Write-Output 'Demo is ready at http://localhost:8080. Quick demo access can load the local demo accounts into the login form.'
+    Write-Output 'Demo is ready at http://localhost:8080. Quick demo access fills both login fields immediately.'
 } finally { Pop-Location }
