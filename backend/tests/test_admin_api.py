@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.api.auth import digest, hasher
 from app.core.config import settings
+from app.core.demo_credentials import DEMO_ACCOUNT_PASSWORDS
 from app.core.db import SessionLocal
 from app.domain.clock import SystemClock
 from app.main import app
@@ -162,14 +163,13 @@ def test_demo_seed_creates_separate_clinical_login_and_preserves_passwords():
 
 def test_local_demo_credentials_fill_form_and_are_not_cached(monkeypatch):
     username = "demo-admin-" + uuid.uuid4().hex[:8]
-    password = secrets.token_urlsafe(18)
+    password = DEMO_ACCOUNT_PASSWORDS["admin"]
     db = SessionLocal()
-    user = AppUser(username=username, password_hash=hasher.hash(password), role=Role.ADMIN, active=True)
+    user = AppUser(username=username, password_hash=hasher.hash("old-random-demo-password"), role=Role.ADMIN, active=True)
     previous_enabled, previous_environment = settings.demo_login_enabled, settings.environment
     settings.demo_login_enabled = True
     settings.environment = "development"
     monkeypatch.setenv("SEED_ADMIN_USERNAME", username)
-    monkeypatch.setenv("SEED_ADMIN_PASSWORD", password)
     client = TestClient(app, base_url="http://localhost")
     try:
         db.add(user); db.commit()
@@ -180,9 +180,9 @@ def test_local_demo_credentials_fill_form_and_are_not_cached(monkeypatch):
         assert response.json() == {"username":username,"password":password}
         assert response.headers["cache-control"] == "no-store, no-cache, must-revalidate"
         assert db.query(AuditLog).filter_by(action="auth.demo_credentials_fetch", object_id=user.id).count() == 1
-        monkeypatch.setenv("SEED_ADMIN_PASSWORD", "mismatched-local-password")
-        mismatch = client.post("/api/v1/auth/demo-credentials", headers={"X-CSRF-Token":csrf}, json={"account":"admin"})
-        assert mismatch.status_code == 503
+        db.refresh(user)
+        assert hasher.verify(user.password_hash, password)
+        assert db.query(AuditLog).filter_by(action="auth.demo_credentials_sync", object_id=user.id).count() == 1
     finally:
         db.query(AuditLog).filter_by(object_id=user.id).delete(synchronize_session=False)
         db.delete(user); db.commit(); db.close(); client.close()

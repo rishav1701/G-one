@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session as DBSession
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
 from app.core.config import settings
+from app.core.demo_credentials import DEMO_ACCOUNT_PASSWORDS
 from app.core.db import get_db
 from app.models.base import AppUser, AuditLog, Role, Session
 router=APIRouter(prefix="/api/v1/auth", tags=["authentication"])
@@ -101,17 +102,20 @@ def demo_credentials(data:DemoAccountIn,request:Request,response:Response,db:DBS
     if len(attempts)>=20: raise HTTPException(429,"Too many attempts. Try again later")
     attempts.append(now_m)
     role,username=_demo_account(data)
-    password_env="SEED_ADMIN_PASSWORD" if data.account=="admin" else "SEED_CLINICIAN_PASSWORD"
-    password=os.environ.get(password_env,"")
+    password=DEMO_ACCOUNT_PASSWORDS[data.account]
     user=db.query(AppUser).filter_by(username=username,role=role,active=True).first()
-    if not password or user is None:
+    if user is None:
         raise HTTPException(503,"Local demo credentials are not ready. Run scripts/demo.ps1 first.")
     try:
         password_matches=hasher.verify(user.password_hash,password)
     except (VerifyMismatchError,InvalidHashError):
         password_matches=False
     if not password_matches:
-        raise HTTPException(503,"Local demo credentials need synchronization. Run scripts/demo.ps1 again.")
+        db.query(Session).filter_by(user_id=user.id).delete(synchronize_session=False)
+        user.password_hash=hasher.hash(password)
+        user.failed_logins=0
+        user.locked_until=None
+        db.add(AuditLog(actor_id=None,action="auth.demo_credentials_sync",object_type="app_user",object_id=user.id,request_id=getattr(request.state,"request_id","unknown")))
     db.add(AuditLog(actor_id=None,action="auth.demo_credentials_fetch",object_type="app_user",object_id=user.id,request_id=getattr(request.state,"request_id","unknown")))
     db.commit()
     response.headers["Cache-Control"]="no-store, no-cache, must-revalidate"

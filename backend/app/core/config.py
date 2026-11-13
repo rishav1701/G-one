@@ -20,7 +20,7 @@ class Settings(BaseSettings):
         "pulse": (51, 110), "temperature": (36.1, 38.0),
     }
     cookie_secure: bool = False
-    demo_login_enabled: bool = False
+    demo_login_enabled: bool = True
     @property
     def session_secret(self) -> str:
         if self.environment != "development" and (len(self.app_secret) < 32 or self.app_secret == "change-me"):

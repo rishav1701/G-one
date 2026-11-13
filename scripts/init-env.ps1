@@ -28,8 +28,6 @@ if (-not (Test-Path -LiteralPath $target)) {
 $required = @{
     'POSTGRES_PASSWORD' = $dbPassword
     'APP_SECRET' = $appSecret
-    'SEED_ADMIN_PASSWORD' = $null
-    'SEED_CLINICIAN_PASSWORD' = $null
 }
 foreach ($name in $required.Keys) {
     $found = $false
@@ -53,4 +51,4 @@ foreach ($name in $required.Keys) {
 }
 
 [System.IO.File]::WriteAllLines($target, [string[]]($lines.ToArray()), [System.Text.UTF8Encoding]::new($false))
-Write-Output 'The git-ignored .env file is ready with local database, application, and demo account secrets.'
+Write-Output 'The git-ignored .env file is ready with local database and application secrets.'

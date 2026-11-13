@@ -3,15 +3,21 @@
 ## Delivered
 
 - Clicking either quick-access account tile fetches its configured username and password into the login form. The password stays masked; the user still chooses **Sign in**.
-- The local setup script generates demo passwords into the git-ignored `.env`. Explicit demo seed scripts synchronize the local seeded account hashes to those stable values and revoke existing sessions for those accounts.
-- Added `POST /api/v1/auth/demo-credentials`. It accepts only the administrator or clinician account, requires a CSRF token, enforces the local development host gate and existing rate limit, checks the account's stored hash, audits the credential fetch without logging values, and sends `Cache-Control: no-store`.
+- The local setup script generates only database and application secrets. Stable public development-demo passwords are defined in backend source; PostgreSQL stores only Argon2 hashes. Demo seeding synchronizes those hashes and revokes existing sessions.
+- `POST /api/v1/auth/demo-credentials` accepts only the administrator or clinician account, requires a CSRF token, enforces the local development host gate and existing rate limit, repairs an outdated account hash when necessary, audits sync/fetch without logging credential values, and sends `Cache-Control: no-store`.
 - Removed the previous demo-session bypass route; the user now submits the regular username/password login form.
 - Outside localhost development, tiles fill only the username. The credential endpoint rejects production and remote requests.
 
 ## Gate results
 
-- `npm test` (from `frontend/`) — passed, 22 tests across 5 files.
+- `npm test -- --run` (from `frontend/`) — passed, 22 tests across 5 files.
 - `npm run build` (from `frontend/`) — passed, including TypeScript compilation and Vite production bundle.
+- `..\\.tools\\python311\\python.exe -m py_compile app\\api\\auth.py app\\core\\config.py app\\core\\demo_credentials.py app\\seed.py tests\\test_admin_api.py` (from `backend/`) — passed.
+- `..\\.tools\\python311\\python.exe -m pytest tests\\test_security_spine.py -q -k "not mutating_authenticated_routes_require_session"` (from `backend/`) — passed, 4 tests; database-backed route test excluded.
+- `docker compose config --quiet` — passed; configuration parsed without starting containers.
+- Temporary-directory run of `scripts/init-env.ps1` — passed; it generated database/application secrets once, did not generate demo passwords, and preserved generated values on rerun.
+- PowerShell parser checks for `scripts/init-env.ps1`, `scripts/demo.ps1`, and `scripts/seed.ps1` — passed.
+- `git diff --check` — passed.
 - `npm run check:raw` and `npm run check:contrast` (from `frontend/`) — passed; all measured token pairs remain above 4.5:1.
 - `..\.tools\python311\python.exe -m pytest tests/test_security_spine.py -q -k "not mutating_authenticated_routes_require_session"` (from `backend/`) — passed, 4 tests; one database-backed test was excluded because PostgreSQL is unavailable.
 - `..\.tools\python311\python.exe -m py_compile app/api/auth.py app/seed.py tests/test_security_spine.py tests/test_admin_api.py` (from `backend/`) — passed.
@@ -28,10 +34,11 @@
 
 - PostgreSQL-backed password synchronization, credential fetch, audit record, and sign-in. The local PostgreSQL service is unavailable to this session.
 - Browser screenshots and axe checks at 1440×900, 1024×768, and 390×844. The in-app browser could not open the local server.
+- Docker rebuild/restart. `docker info --format '{{.ServerVersion}}'` failed because Docker Desktop's Linux engine pipe is unavailable.
 
 ## Security limitation
 
-- The local `.env` contains plaintext demo passwords and is git-ignored. The credential endpoint intentionally reveals the selected demo password to the browser only in localhost development. Production and remote requests are rejected; do not enable credential retrieval on a hosted deployment.
+- Demo passwords are intentionally public constants for the localhost demonstration and are visible in source. The credential endpoint reveals the selected demo password to the browser only in localhost development. Production uses separately supplied seed passwords and remote requests are rejected; do not enable credential retrieval on a hosted deployment.
 
 ## Next verification
 

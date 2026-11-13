@@ -17,7 +17,7 @@ Use PowerShell from the repository root. Docker Desktop/Engine must be running.
 .\scripts\demo.ps1
 ```
 
-The setup script creates or updates a git-ignored `.env` with random local database, application, and demo account passwords. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates the two demo accounts. It synchronizes these local demo account passwords from `.env` so the login tiles can populate the credential fields. The default usernames are `phaseadmin` (administration and simulator controls) and `phaseclinician` (patient records, manual observations, and clinical actions). No secret is committed.
+The setup script creates or updates a git-ignored `.env` with random database and application secrets. The demo script builds and starts PostgreSQL, applies migrations, resets the simulator with seed 42, and creates or synchronizes two stable local demo accounts. Their fixed development-demo passwords are defined in the backend; PostgreSQL stores only Argon2 password hashes. The default usernames are `phaseadmin` (administration and simulator controls) and `phaseclinician` (patient records, manual observations, and clinical actions). These public demo accounts are for localhost demonstration only, not production.
 
 Open [http://localhost:8080](http://localhost:8080) and sign in. The health check is [http://localhost:8080/health](http://localhost:8080/health).
 
@@ -29,9 +29,9 @@ Open [http://localhost:8080](http://localhost:8080) and sign in. The health chec
 4. Open **Alerts** to review the explanation and history, record a response, and resolve through the confirmation flow.
 5. Use the patient directory to inspect `SIM-000007` (missing observations), `SIM-000009` (sensor disconnection), and `SIM-000011` (data-quality scenario). These are fixed simulated cases, not real patients.
 
-The setup script generates local demo passwords into the git-ignored `.env`. Running `scripts/demo.ps1` or `scripts/seed.ps1` synchronizes the local demo account hashes from those values, so an existing local demo database recovers the same credentials. These commands revoke existing sessions for the two demo accounts. The normal seed function preserves account passwords unless this explicit local-demo sync is enabled.
+Running `scripts/demo.ps1` or `scripts/seed.ps1` synchronizes existing local demo account hashes to the same stable demo passwords and revokes their existing sessions. Clicking a quick-access tile also repairs that account's hash if needed, then loads the username and password into the form. Production seeding uses separately supplied `SEED_*_PASSWORD` values; the local demo credentials endpoint is unavailable outside localhost development.
 
-On the loopback-only Docker Compose demo, both quick-access tiles fetch their account's username and password into the sign-in form. Credential retrieval is available only in development for localhost requests, requires CSRF, is rate-limited, and is not cached. Outside that local demo, tiles fill the username only; passwords are never returned by the credential endpoint in production.
+On the loopback-only Docker Compose demo, both quick-access tiles fetch their account's username and password into the sign-in form. Credential retrieval is enabled by default in development for localhost requests, requires CSRF, is rate-limited, and is not cached. Outside that local demo, credential retrieval is rejected.
 
 Other demo commands:
 

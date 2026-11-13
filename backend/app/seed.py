@@ -1,5 +1,4 @@
 import os
-import secrets
 import uuid
 
 from argon2 import PasswordHasher
@@ -7,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
+from app.core.demo_credentials import DEMO_ACCOUNT_PASSWORDS
 from app.models.base import AppUser, AuditLog, Role, Session as UserSession, UserWard, Ward
 
 
@@ -22,7 +22,7 @@ def seed_users(
     clinician_password: str,
     sync_demo_passwords: bool = False,
 ) -> list[str]:
-    """Create demo accounts; optionally sync local demo credentials from .env."""
+    """Create accounts and optionally synchronize public development-demo passwords."""
     messages: list[str] = []
 
     admin = db.scalar(select(AppUser).where(AppUser.username == admin_username))
@@ -50,7 +50,7 @@ def seed_users(
             admin.failed_logins = 0
             admin.locked_until = None
             db.add(AuditLog(actor_id=None, action="seed.demo_password_sync", object_type="app_user", object_id=admin.id, request_id=str(uuid.uuid4())))
-            messages.append(f"Local demo credentials synchronized for ADMIN {admin_username} from the git-ignored .env.")
+            messages.append(f"Local demo credentials synchronized for ADMIN {admin_username}.")
         else:
             messages.append(f"ADMIN {admin_username} already exists; credentials were not changed.")
     db.query(UserWard).filter_by(user_id=admin.id).delete(synchronize_session=False)
@@ -95,7 +95,7 @@ def seed_users(
             clinician.failed_logins = 0
             clinician.locked_until = None
             db.add(AuditLog(actor_id=None, action="seed.demo_password_sync", object_type="app_user", object_id=clinician.id, request_id=str(uuid.uuid4())))
-            messages.append(f"Local demo credentials synchronized for SENIOR_CLINICIAN {clinician_username} from the git-ignored .env.")
+            messages.append(f"Local demo credentials synchronized for SENIOR_CLINICIAN {clinician_username}.")
         else:
             messages.append(
                 f"SENIOR_CLINICIAN {clinician_username} already exists; credentials were not changed."
@@ -115,17 +115,18 @@ def seed_users(
 
 def main():
     admin_username = os.environ.get("SEED_ADMIN_USERNAME", "phaseadmin")
-    admin_password = os.environ.get("SEED_ADMIN_PASSWORD") or secrets.token_urlsafe(18)
     clinician_username = os.environ.get("SEED_CLINICIAN_USERNAME", "phaseclinician")
-    clinician_password = os.environ.get("SEED_CLINICIAN_PASSWORD") or secrets.token_urlsafe(18)
-    sync_demo_passwords = (
-        os.environ.get("DEMO_CREDENTIALS_SYNC", "false").lower() == "true"
-        and os.environ.get("ENVIRONMENT", "development") == "development"
-    )
-    if sync_demo_passwords and not (
-        os.environ.get("SEED_ADMIN_PASSWORD") and os.environ.get("SEED_CLINICIAN_PASSWORD")
-    ):
-        raise RuntimeError("Run scripts/init-env.ps1 before syncing local demo credentials.")
+    development = os.environ.get("ENVIRONMENT", "development") == "development"
+    if development:
+        admin_password = DEMO_ACCOUNT_PASSWORDS["admin"]
+        clinician_password = DEMO_ACCOUNT_PASSWORDS["clinician"]
+        sync_demo_passwords = True
+    else:
+        admin_password = os.environ.get("SEED_ADMIN_PASSWORD", "")
+        clinician_password = os.environ.get("SEED_CLINICIAN_PASSWORD", "")
+        if not admin_password or not clinician_password:
+            raise RuntimeError("Production seeding requires SEED_ADMIN_PASSWORD and SEED_CLINICIAN_PASSWORD.")
+        sync_demo_passwords = False
 
     db = SessionLocal()
     try:
